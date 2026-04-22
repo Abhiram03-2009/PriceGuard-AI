@@ -1,0 +1,192 @@
+event_id,title,datetime,venue,city,state,lowest_price,average_price,highest_price,listing_count,popularity
+18013876,Scottsdale Arabian Horse Show,2026-02-19T08:00:00,Westworld of Scottsdale,Scottsdale,AZ,,,,,0.6912969968
+17831966,Carvana Mesa Cup,2026-02-19T08:00:00,Arizona Athletic Grounds,Mesa,AZ,,,,,0.7102761198
+17944325,WIAA Mat Classic - Thursday,2026-02-19T09:00:00,Tacoma Dome,Tacoma,WA,,,,,0.7248711852
+17831970,Carvana Mesa Cup,2026-02-20T08:00:00,Arizona Athletic Grounds,Mesa,AZ,,,,,0.7107315888
+18013877,Scottsdale Arabian Horse Show,2026-02-20T08:00:00,Westworld of Scottsdale,Scottsdale,AZ,,,,,0.68727854
+17944326,WIAA Mat Classic - Friday,2026-02-20T09:00:00,Tacoma Dome,Tacoma,WA,,,,,0.7521220696
+17890256,Toughman Contest,2026-02-20T19:00:00,Wesbanco Arena,Wheeling,WV,,,,,0.724865877
+17901921,Monsters of Destruction,2026-02-20T19:30:00,Southern Illinois Center,Du Quoin,IL,,,,,0.7087018749
+17954837,MicroMania Wrestling,2026-02-20T21:00:00,The Canyon - Agoura Hills,Agoura Hills,CA,,,,,0.7402327588
+18037888,Oysterfest - 2 Day Pass,2026-02-21T03:30:00,1093 Peachtree St NE (12th and Peachtree - NE corner),Atlanta,GA,,,,,0.7116787166
+18013878,Scottsdale Arabian Horse Show,2026-02-21T08:00:00,Westworld of Scottsdale,Scottsdale,AZ,,,,,0.6850740476
+17831972,Carvana Mesa Cup,2026-02-21T08:00:00,Arizona Athletic Grounds,Mesa,AZ,,,,,0.7096771993
+17944327,WIAA Mat Classic- Saturday,2026-02-21T09:00:00,Tacoma Dome,Tacoma,WA,,,,,0.7239135337
+17890257,Toughman Contest,2026-02-21T19:00:00,Wesbanco Arena,Wheeling,WV,,,,,0.7181274629
+17872814,Shamrock FC Mixed Martial Arts,2026-02-21T19:30:00,Ameristar Casino & Hotel - Kansas City,Kansas City,MO,,,,,0.6930947707
+17885669,Tuff Hedeman Bull Riding,2026-02-21T20:00:00,El Paso County Coliseum,El Paso,TX,,,,,0.7763321807
+18049726,Monsters of Destruction,2026-02-21T19:30:00,Southern Illinois Center,Du Quoin,IL,,,,,0.7089759705
+17831974,Carvana Mesa Cup,2026-02-22T08:00:00,Arizona Athletic Grounds,Mesa,AZ,,,,,0.6911207462
+17973767,Drag Queen Brunch,2026-02-22T11:30:00,Blue Ocean Music Hall,Salisbury,MA,,,,,0.6965260109
+17901922,Monsters of Destruction,2026-02-22T14:00:00,Southern Illinois Center,Du Quoin,IL,,,,,0.6821575025
+17980871,USA Curling - Multi-Session Options,2026-02-23T19:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6997385977
+17980862,2026 USA Curling Men's and Women's National Championships,2026-02-24T09:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6777959282
+18005754,2026 USA Curling Men's and Women's National Championships,2026-02-24T14:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6738670294
+17980873,2026 USA Curling Men's and Women's National Championships,2026-02-24T19:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6917623193
+18005757,2026 USA Curling Men's and Women's National Championships,2026-02-25T08:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6699730219
+17980870,2026 USA Curling National Championships - Women's Session 3,2026-02-25T12:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6824449481
+17980863,2026 USA Curling Men's and Women's National Championships,2026-02-25T16:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.7000582905
+17980864,2026 USA Curling National Championships - Women's Session 4,2026-02-25T20:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6789370659
+17980861,2026 USA Curling National Championships,2026-02-26T19:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6793200406
+18000147,Montana's Brier - Opening Weekend Package,2026-02-27T03:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6418461221
+17980860,2026 USA Curling National Championships - Women's Session,2026-02-27T09:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6706979073
+18005758,2026 USA Curling Men's and Women's National Championships,2026-02-27T14:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6712800929
+18000159,Montana's Brier - Draw 1,2026-02-27T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6499167669
+17980872,USA Curling National Championships - Men's Session 7,2026-02-27T19:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6877111703
+18047587,Pro Cheer League - Houston,2026-02-27T19:00:00,Toyota Center,Houston,TX,,,,,0.7038062601
+18019982,Decades Silent Disco (21+ Event),2026-02-27T20:00:00,Buffalo Iron Works,Buffalo,NY,,,,,0.6814181264
+17980866,USA Curling - Playoffs-First Round,2026-02-28T12:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6859769291
+18000161,Montana's Brier - Draw 2,2026-02-28T14:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6536581507
+18000163,Montana's Brier - Draw 3,2026-02-28T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6509367075
+17980865,USA Curling - Semifinals,2026-02-28T19:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.691691662
+17953557,2026 Peterborough Lakers - Full Season Package,2026-03-01T03:30:00,Peterborough Memorial Centre,Peterborough,ON,,,,,0.6668173004
+18000165,Montana's Brier - Draw 4,2026-03-01T09:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6255089423
+17980868,USA Curling National Championships - Men's Final,2026-03-01T12:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6779587569
+18000167,Montana's Brier - Draw 5,2026-03-01T14:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6410979274
+18043904,The Rat Pack with Michael Dutra,2026-03-01T15:00:00,The Spire Center For The Performing Arts,Plymouth,MA,,,,,0.6645925417
+17980867,USA Curling National Championships Women's Final,2026-03-01T16:00:00,Bojangles Coliseum,Charlotte,NC,,,,,0.6776652685
+18000169,Montana's Brier - Draw 6,2026-03-01T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6344425775
+18021242,MNUFC2 at Austin FC II,2026-03-01T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.6743076714
+18000149,Montana's Brier - Monday,2026-03-02T03:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6065822302
+18000171,Montana's Brier - Draw 7,2026-03-02T09:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6009795441
+18000173,Montana's Brier - Draw 8,2026-03-02T14:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6273914402
+18000175,Montana's Brier - Draw 9,2026-03-02T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6246009528
+18000151,Montana's Brier - Tuesday,2026-03-03T03:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6216240918
+18000177,Montana's Brier - Draw 10,2026-03-03T09:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6049399309
+18000179,Montana's Brier - Draw 11,2026-03-03T14:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6254235051
+18000181,Montana's Brier - Draw 12,2026-03-03T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6220735656
+18000153,Montana's Brier - Wednesday,2026-03-04T03:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6196979275
+18000183,Montana's Brier - Draw 13,2026-03-04T09:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6025141599
+18000185,Montana's Brier - Draw 14,2026-03-04T14:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6220856881
+18000187,Montana's Brier - Draw 15,2026-03-04T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6164983233
+18000155,Montana's Brier - Thursday,2026-03-05T03:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6115227982
+18000189,Montana's Brier - Draw 16,2026-03-05T09:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.5940369831
+18000191,Montana's Brier - Draw 17,2026-03-05T14:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6463133438
+18000193,Montana's Brier - Draw 18,2026-03-05T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6120330885
+18000157,Montana's Brier - Championship Weekend Package,2026-03-06T03:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6129978257
+17970320,MHSAA State Wrestling Finals - All Sessions (3/6 - 3/7),2026-03-06T03:30:00,Ford Field,Detroit,MI,,,,,0.6728656931
+17983883,2026 Arnold Sports Festival Expo - Friday,2026-03-06T10:00:00,Greater Columbus Convention Center,Columbus,OH,,,,,0.7200906816
+18000195,Montana's Brier - Draw 19,2026-03-06T13:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.623943808
+18000197,Montana's Brier - Draw 20,2026-03-06T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6205904971
+17983884,2026 Arnold Sports Festival Expo - Saturday,2026-03-07T10:00:00,Greater Columbus Convention Center,Columbus,OH,,,,,0.6910947402
+18000199,Montana's Brier - Draw 21,2026-03-07T13:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6315819382
+18000201,Montana's Brier - Draw 22,2026-03-07T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.624538193
+17990458,Pinocchio,2026-03-07T16:00:00,Esplanade Arts and Heritage Centre,Medicine Hat,AB,,,,,0.6532328055
+18070020,Silent Disco - Music Through The Decades,2026-03-07T19:30:00,Photo City Improv Comedy and Music Venue,Rochester,NY,,,,,0.6743411081
+18078374,When Sisters Speak,2026-03-07T20:00:00,Jane Mallett Theatre,Toronto,ON,,,,,0.6693729353
+17983885,2026 Arnold Sports Festival Expo - Sunday,2026-03-08T10:00:00,Greater Columbus Convention Center,Columbus,OH,,,,,0.6536554699
+18000203,Montana's Brier - Draw 23,2026-03-08T13:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6214254394
+17694379,Elevate the Stage,2026-03-08T16:00:00,Propst Arena at the Von Braun Center,Huntsville,AL,,,,,0.6054973279
+18000205,Montana's Brier - Draw 24,2026-03-08T19:30:00,Mary Brown's Centre,St. John's,NL,,,,,0.6133302237
+18021249,Ventura County at Austin FC II,2026-03-08T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.6533273717
+17914415,Monsters of Destruction,2026-03-13T19:30:00,The Corbin Arena,Corbin,KY,,,,,0.6192777542
+17850703,FMX World Tour,2026-03-14T14:30:00,The Arena at TD Place,Ottawa,ON,,,,,0.6587811027
+17914416,Monsters of Destruction,2026-03-14T19:30:00,The Corbin Arena,Corbin,KY,,,,,0.6223655153
+17880805,Shamrock FC Mixed Martial Arts,2026-03-14T19:30:00,Ameristar St. Charles,Saint Charles,MO,,,,,0.6555524643
+17995788,BKT Tires World Womens Curling Championship - Draw 2,2026-03-14T19:00:00,WinSport Event Centre,Calgary,AB,,,,,0.6338020903
+18012153,Tuff Hedeman Bull Riding,2026-03-14T19:00:00,South Point Arena,Las Vegas,NV,,,,,0.6808809781
+17995791,BKT Tires World Womens Curling Championship - Draw 5,2026-03-15T08:30:00,WinSport Event Centre,Calgary,AB,,,,,0.6171471434
+18021254,North Texas SC at Austin FC II,2026-03-15T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.663594067
+17390369,BKT Tires World Womens Curling Championship - Draw 8,2026-03-16T09:00:00,WinSport Event Centre,Calgary,AB,,,,,0.5862052594
+17390370,BKT Tires World Womens Curling Championship - Draw 9,2026-03-17T09:00:00,WinSport Event Centre,Calgary,AB,,,,,0.5947738989
+17390371,BKT Tires World Womens  Championship - Wednesday Day Pack,2026-03-18T09:00:00,WinSport Event Centre,Calgary,AB,,,,,0.5951344815
+17390372,BKT Tires World Womens Curling Championship - Draw 15,2026-03-19T09:00:00,WinSport Event Centre,Calgary,AB,,,,,0.5891106387
+17420437,BKT Tires World Womens Curling Championship-Championship Weekend Pack,2026-03-20T03:30:00,WinSport Event Centre,Calgary,AB,,,,,0.6147031768
+17995792,BKT Tires World Womens Curling Championship - Draw 19,2026-03-20T09:00:00,WinSport Event Centre,Calgary,AB,,,,,0.5980357213
+17936189,Return of the Super Bull,2026-03-20T20:00:00,The Corbin Arena,Corbin,KY,,,,,0.6428419768
+18031485,Heartland Men's Chorus - Back to the 80s,2026-03-20T19:30:00,Folly Theater,Kansas City,MO,,,,,0.6405057807
+17993650,12U Spring Break Bash - 3/21,2026-03-21T08:00:00,Devon Park,Oklahoma City,OK,,,,,0.6510595731
+17995790,BKT Tires World Womens Curling Championship - Draw 21,2026-03-21T10:00:00,WinSport Event Centre,Calgary,AB,,,,,0.6081482665
+17936190,Return of the Super Bull,2026-03-21T20:00:00,The Corbin Arena,Corbin,KY,,,,,0.6447228604
+18031483,Heartland Men's Chorus - Back to the 80s,2026-03-21T19:30:00,Folly Theater,Kansas City,MO,,,,,0.6435247121
+17993651,12U Spring Break Bash - 3/22,2026-03-22T08:00:00,Devon Park,Oklahoma City,OK,,,,,0.6462502507
+17995789,BKT Tires World Womens Curling Championship - Draw 24,2026-03-22T09:00:00,WinSport Event Centre,Calgary,AB,,,,,0.59980669
+18031484,Heartland Men's Chorus - Back to the 80s,2026-03-22T15:30:00,Folly Theater,Kansas City,MO,,,,,0.6365503473
+17983077,PRCA Xtreme Bulls Bull Riding,2026-03-27T19:30:00,Tuacahn Amphitheatre and Center for the Arts,Ivins,UT,,,,,0.6195829603
+17963405,Major League Volleyball All-Star Match,2026-03-28T12:00:00,Addition Financial Arena,Orlando,FL,,,,,0.6204605657
+17983078,PRCA Bullriding,2026-03-28T19:30:00,Tuacahn Amphitheatre and Center for the Arts,Ivins,UT,,,,,0.6370401729
+18072765,2026 Street League Skateboarding - Downtown Los Angeles Takeover,2026-04-04T03:30:00,Mission,Los Angeles,CA,,,,,0.617838332
+18013627,Maple United v Northern United,2026-04-06T12:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.5806331144
+18013628,Shield Curling Club v Northern United,2026-04-07T12:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.5867030424
+17457607,2026 FEI Jumping World Cup Finals - All Sessions (4/8 - 4/12),2026-04-08T03:30:00,Dickies Arena,Fort Worth,TX,,,,,0.6232086768
+18013629,Shield Curling Club v Typhoon Curling Club,2026-04-08T12:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.5864702925
+18010074,FEI World Cup 2026: Session 1 - Opening Training Day,2026-04-08T18:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6246085241
+18013630,Rock League Preview - Draw 11 (Thursday Package),2026-04-09T12:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.5815795716
+17199097,2026 FEI World Cup Finals - Session 2,2026-04-09T13:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6082087328
+17470799,2026 FEI World Cup Finals - Session 3,2026-04-09T19:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6150987356
+18013631,Shield Curling Club v Maple United,2026-04-10T12:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.5930531574
+17470800,2026 FEI World Cup Finals - Session 4,2026-04-10T11:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6175726694
+17470801,2026 FEI World Cup Finals - Session 5 - Dressage Clinic,2026-04-10T14:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6330882279
+17470802,2026 FEI World Cup Finals - Session 6,2026-04-10T19:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6274214963
+18013632,Rock League Season 1 - Saturday Package,2026-04-11T12:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.6028987901
+17470803,2026 FEI World Cup Finals - Session 7,2026-04-11T12:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6360244103
+17470804,2026 FEI World Cup Finals - Session 8,2026-04-11T19:00:00,Dickies Arena,Fort Worth,TX,,,,,0.6311840591
+18013633,Rock League Preview - Season 1 - Match 19,2026-04-12T10:00:00,Mattamy Athletic Centre,Toronto,ON,,,,,0.5726059536
+17470805,2026 FEI World Cup Finals - Session 9,2026-04-12T12:00:00,Dickies Arena,Fort Worth,TX,,,,,0.691466862
+18021257,Houston Dynamo 2 at Austin FC II,2026-04-12T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.6198586503
+17870556,Ares Pickleball Slam 4,2026-04-15T19:00:00,Hard Rock Live - Hollywood,Hollywood,FL,,,,,0.613140432
+17669010,2026 Senior PGA Championship - Any Day Flex Four Pack,2026-04-16T06:00:00,Concession Golf Club,Bradenton,FL,,,,,0.7124073992
+17870633,2026 Senior PGA Championship - Any Day Flex,2026-04-16T06:00:00,Concession Golf Club,Bradenton,FL,,,,,0.7437155066
+17654291,2026 Senior PGA Championship - Club PGA Package,2026-04-16T06:30:00,Concession Golf Club,Bradenton,FL,,,,,0.8123068542
+17939408,Fitness Atlantic,2026-04-17T18:00:00,Mohegan Sun Cabaret,Uncasville,CT,,,,,0.5997692074
+18004257,Fitness Atlantic,2026-04-18T10:00:00,Mohegan Sun Cabaret,Uncasville,CT,,,,,0.5898286157
+17939410,Fitness Atlantic Morning Show,2026-04-18T18:00:00,Mohegan Sun Cabaret,Uncasville,CT,,,,,0.6044361825
+18021324,Tacoma Defiance at Austin FC II,2026-05-10T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.5924568319
+18021336,St. Louis CITY2 at Austin FC II,2026-05-17T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.5297695912
+17973324,Shamrock FC Mixed Martial Arts,2026-05-30T19:30:00,Ameristar Casino & Hotel - Kansas City,Kansas City,MO,,,,,0.5446508796
+17973404,MLP St. Louis - Friday 6/5 - Session 2,2026-06-05T12:00:00,Chaifetz Arena,St. Louis,MO,,,,,0.6098069869
+17973405,Major League Pickleball St. Louis - Saturday Session 3,2026-06-06T12:00:00,Chaifetz Arena,St. Louis,MO,,,,,0.6193972628
+17973406,MLP St. Louis - Sunday 6/7 - Session 4,2026-06-07T03:30:00,Chaifetz Arena,St. Louis,MO,,,,,0.6068517179
+18021337,LAFC 2 at Austin FC II,2026-06-07T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.5026801671
+17880799,Shamrock FC Mixed Martial Arts,2026-06-20T19:30:00,Ameristar St. Charles,Saint Charles,MO,,,,,0.5192371334
+18021338,Sporting KC II at Austin FC II,2026-06-21T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.4906115639
+17907159,Dude Perfect - Squad Games Tour 2026,2026-06-25T19:00:00,North Charleston Coliseum,North Charleston,SC,,,,,0.6801380428
+18052904,Bet365 U.S. Darts Masters,2026-06-25T19:00:00,The Theater at MSG,New York,NY,,,,,0.7295415219
+18052906,Bet365 U.S. Darts Masters,2026-06-26T13:00:00,The Theater at MSG,New York,NY,,,,,0.6878676879
+17907224,Dude Perfect - Squad Games Tour 2026,2026-06-26T19:00:00,Bon Secours Wellness Arena,Greenville,SC,,,,,0.7143130957
+18052905,Bet365 U.S. Darts Masters,2026-06-26T19:30:00,The Theater at MSG,New York,NY,,,,,0.7507032824
+17913436,Dude Perfect - Squad Games Tour 2026,2026-06-27T19:00:00,Chartway Arena,Norfolk,VA,,,,,0.6499804607
+17965009,Monsters of Destruction - Saturday,2026-06-27T19:30:00,Days of 76 Event Center,Deadwood,SD,,,,,0.5150239689
+17965011,Monsters of Destruction,2026-06-28T14:00:00,Days of 76 Event Center,Deadwood,SD,,,,,0.5234952208
+17907318,Dude Perfect - Squad Games Tour 2026,2026-06-28T18:00:00,Giant Center,Hershey,PA,,,,,0.7399777667
+18021339,Colorado Rapids 2 at Austin FC II,2026-07-05T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.4654511378
+17909656,Dude Perfect - Squad Games Tour 2026,2026-07-09T19:00:00,Moody Center ATX,Austin,TX,,,,,0.7284950542
+17909461,Dude Perfect - Squad Games Tour 2026,2026-07-10T19:00:00,Dickies Arena,Fort Worth,TX,,,,,0.7388007221
+17907147,Dude Perfect - Squad Games Tour 2026,2026-07-11T18:00:00,American Airlines Center,Dallas,TX,,,,,0.7381795039
+17907154,Dude Perfect - Squad Games Tour 2026,2026-07-12T18:00:00,Simmons Bank Arena,North Little Rock,AR,,,,,0.7118238572
+18021340,MNUFC2 at Austin FC II,2026-07-12T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.4856530955
+17909103,Dude Perfect - Squad Games Tour 2026,2026-07-15T19:00:00,Pinnacle Bank Arena,Lincoln,NE,,,,,0.6896614194
+17907142,Dude Perfect - Squad Games Tour 2026,2026-07-16T19:00:00,Paycom Center,Oklahoma City,OK,,,,,0.7001704813
+17907146,Dude Perfect - Squad Games Tour 2026,2026-07-17T19:00:00,FedExForum,Memphis,TN,,,,,0.694109119
+17907186,Dude Perfect - Squad Games Tour 2026,2026-07-18T18:00:00,Thompson-Boling Arena at Food City Center,Knoxville,TN,,,,,0.6986960764
+17907233,Dude Perfect - Squad Games Tour 2026,2026-07-22T19:00:00,Allen County War Memorial Coliseum,Fort Wayne,IN,,,,,0.715585019
+17907223,Dude Perfect - Squad Games Tour 2026,2026-07-23T19:00:00,Heritage Bank Center,Cincinnati,OH,,,,,0.6964335159
+17909397,Dude Perfect - Squad Games Tour 2026,2026-07-24T19:00:00,Fiserv Forum,Milwaukee,WI,,,,,0.7073964089
+17913438,Dude Perfect - Squad Games Tour 2026,2026-07-25T18:00:00,Casey's Center,Des Moines,IA,,,,,0.7454388663
+17913440,Dude Perfect - Squad Games Tour 2026,2026-07-26T18:00:00,Target Center,Minneapolis,MN,,,,,0.68692027
+17907149,Dude Perfect - Squad Games Tour 2026,2026-07-29T19:00:00,Legacy Arena at The BJCC,Birmingham,AL,,,,,0.7241931945
+17907144,Dude Perfect - Squad Games Tour 2026,2026-07-30T19:00:00,Spectrum Center - Charlotte,Charlotte,NC,,,,,0.6824222204
+17907217,Dude Perfect - Squad Games Tour 2026,2026-07-31T19:00:00,Gas South Arena,Duluth,GA,,,,,0.7339691517
+17907176,Dude Perfect - Squad Games Tour 2026,2026-08-01T18:00:00,Benchmark International Arena,Tampa,FL,,,,,0.6717659436
+17907189,Dude Perfect - Squad Games Tour 2026,2026-08-02T18:00:00,VyStar Veterans Memorial Arena,Jacksonville,FL,,,,,0.7019889769
+18072655,Night of Destruction,2026-08-02T18:00:00,Jackson County Fairgrounds - Maquoketa,Maquoketa,IA,,,,,0.4929173521
+17995687,2026 World Athletics U20 Championships - Wednesday,2026-08-05T03:30:00,Hayward Field,Eugene,OR,,,,,0.5707815571
+17995688,2026 World Athletics U20 Championships - Thursday,2026-08-06T03:30:00,Hayward Field,Eugene,OR,,,,,0.5662911179
+17936117,Monsters of Destruction,2026-08-06T19:30:00,Illinois State Fairgrounds,Springfield,IL,,,,,0.4711576963
+17995689,2026 World Athletics U20 Championships - Friday,2026-08-07T03:30:00,Hayward Field,Eugene,OR,,,,,0.5729821045
+17995690,2026 World Athletics U20 Championships - Saturday,2026-08-08T03:30:00,Hayward Field,Eugene,OR,,,,,0.5866094364
+17995691,2026 World Athletics U20 Championships - Sunday,2026-08-09T03:30:00,Hayward Field,Eugene,OR,,,,,0.6413633976
+18021341,Sporting KC II at Austin FC II,2026-08-09T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.4743577959
+17996086,2026 Major League Pickleball Playoffs - Thursday,2026-08-13T12:00:00,Barnes Tennis Center,San Diego,CA,,,,,0.5931280933
+17996085,2026 Major League Pickleball Playoffs - Saturday,2026-08-15T12:00:00,Barnes Tennis Center,San Diego,CA,,,,,0.615028182
+18025034,Vancouver Whitecaps FC 2 at Austin FC II,2026-08-16T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.4760693927
+18021342,The Town FC at Austin FC II,2026-08-23T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.477678562
+17880801,Shamrock FC Mixed Martial Arts,2026-08-29T19:30:00,Ameristar St. Charles,Saint Charles,MO,,,,,0.502128392
+18021343,Colorado Rapids 2 at Austin FC II,2026-09-13T19:30:00,Parmer Field at St. David's Performance Center,Austin,TX,,,,,0.441987724
+17973325,Shamrock FC Mixed Martial Arts,2026-10-10T19:30:00,Ameristar Casino & Hotel - Kansas City,Kansas City,MO,,,,,0.488520701
+18005690,Shamrock FC Mixed Martial Arts,2026-11-21T19:30:00,Ameristar St. Charles,Saint Charles,MO,,,,,0.4908840224
+17947159,Mosconi Cup 2026,2026-11-27T13:00:00,Orange County Convention Center,Orlando,FL,,,,,0.4851943548
+17947160,Mosconi Cup 2026,2026-11-28T13:00:00,Orange County Convention Center,Orlando,FL,,,,,0.4971010314
+17947161,Mosconi Cup 2026,2026-11-29T13:00:00,Orange County Convention Center,Orlando,FL,,,,,0.4813696877
+17947162,Mosconi Cup 2026,2026-11-30T13:00:00,Orange County Convention Center,Orlando,FL,,,,,0.4514280463
+17917378,MLV Minnesota Season Ticket Deposit,2026-12-31T12:00:00,Grand Casino Arena,Saint Paul,MN,,,,,0.5035097302
