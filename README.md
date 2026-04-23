@@ -1,5 +1,19 @@
 # PriceGuard AI — Arbitrage Intelligence Platform
 
+## Cloning the Repository (Getting Started Locally)
+
+If you are setting this project up on a new computer, you can clone the code directly from GitHub onto your local machine:
+
+1. **Open your terminal** and navigate to the folder where you want to save the project.
+2. **Run the clone command:**
+   ```bash
+   git clone https://github.com/Abhiram03-2009/PriceGuard-AI.git
+   ```
+3. **Navigate into the new folder:**
+   ```bash
+   cd PriceGuard-AI
+   ```
+
 ## Quick Start (React App)
 
 1. **Install Node.js**: Ensure you have Node.js installed on your machine.
@@ -63,20 +77,7 @@ lowest_price, average_price, highest_price
 - All ML runs **entirely client-side** (no Python backend or server fees required).
 - Models retrain fresh on each uploaded dataset.
 - Seed is date-based for daily reproducibility.
-## Cloning the Repository (Getting Started Locally)
-
-If you are setting this project up on a new computer, you can clone the code directly from GitHub onto your local machine:
-
-1. **Open your terminal** and navigate to the folder where you want to save the project.
-2. **Run the clone command:**
-   ```bash
-   git clone https://github.com/Abhiram03-2009/PriceGuard-AI.git
-   ```
-3. **Navigate into the new folder:**
-   ```bash
-   cd PriceGuard-AI
-   ```
-
+- Designed natively for SeatGeek output but generalizes to any standard CSV export.
 ## Updating the Code (Git Commands)
 
 If you make further changes to the code and need to push them to your GitHub repository, run these commands in your terminal from the root folder (`PriceGuard AI Model`):
