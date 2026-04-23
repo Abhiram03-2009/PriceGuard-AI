@@ -64,3 +64,20 @@ lowest_price, average_price, highest_price
 - Models retrain fresh on each uploaded dataset.
 - Seed is date-based for daily reproducibility.
 - Designed natively for SeatGeek output but generalizes to any standard CSV export.
+
+## Updating the Code (Git Commands)
+
+If you make further changes to the code and need to push them to your GitHub repository, run these commands in your terminal from the root folder (`PriceGuard AI Model`):
+
+1. **Stage your changes:**
+   ```bash
+   git add .
+   ```
+2. **Commit your changes:**
+   ```bash
+   git commit -m "Describe what you updated here"
+   ```
+3. **Push to GitHub:**
+   ```bash
+   git push
+   ```
