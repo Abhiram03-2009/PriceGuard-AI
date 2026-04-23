@@ -63,7 +63,19 @@ lowest_price, average_price, highest_price
 - All ML runs **entirely client-side** (no Python backend or server fees required).
 - Models retrain fresh on each uploaded dataset.
 - Seed is date-based for daily reproducibility.
-- Designed natively for SeatGeek output but generalizes to any standard CSV export.
+## Cloning the Repository (Getting Started Locally)
+
+If you are setting this project up on a new computer, you can clone the code directly from GitHub onto your local machine:
+
+1. **Open your terminal** and navigate to the folder where you want to save the project.
+2. **Run the clone command:**
+   ```bash
+   git clone https://github.com/Abhiram03-2009/PriceGuard-AI.git
+   ```
+3. **Navigate into the new folder:**
+   ```bash
+   cd PriceGuard-AI
+   ```
 
 ## Updating the Code (Git Commands)
 
