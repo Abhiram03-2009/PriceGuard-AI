@@ -68,7 +68,13 @@ body::before {
 @keyframes cursor-blink { 0%, 100% { border-color: var(--b); } 50% { border-color: transparent; } }
 
 #root { position: relative; z-index: 1; }
-.app { display: flex; flex-direction: column; min-height: 100vh; }
+.app { 
+  display: flex; flex-direction: column; min-height: 100vh; 
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
 
 /* ── LOADING SCREEN ── */
 .loading {
