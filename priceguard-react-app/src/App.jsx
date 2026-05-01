@@ -526,7 +526,7 @@ export default function App() {
               <div className="card-hd"><div className="card-title">Model Architecture</div></div>
               <div className="card-body">
                 <div className="code-block">
-                  <span className="co-g">// PriceGuard AI — Ensemble ML Architecture</span><br />
+                  <span className="co-g">{'// PriceGuard AI — Ensemble ML Architecture'}</span><br />
                   <span className="co-b">Layer 1 (58%)</span>  Random Forest Regressor    — n_trees=28, max_depth=7, bootstrap sampling<br />
                   <span className="co-p">Layer 2 (42%)</span>  Gradient Boosting Machine  — rounds=22, lr=0.11, residual correction<br />
                   <span className="co-a">Ensemble</span>       RF×0.58 + GBM×0.42        → Predicted fair market price<br />

@@ -55,7 +55,6 @@ export default function FetchTab({ onDataLoaded, add }) {
   const [log,         setLog]         = useState([]);
   const [fetchedRows, setFetchedRows] = useState([]);
   const [progress,    setProgress]    = useState(0);
-  const [totalPages,  setTotalPages]  = useState(0);
   const abortRef = useRef(false);
   const logRef = useRef(null);
 
@@ -76,7 +75,6 @@ export default function FetchTab({ onDataLoaded, add }) {
     let page = 1;
     let pricedCount = 0;
     const maxP = Math.max(1, Math.min(50, maxPages));
-    setTotalPages(maxP);
 
     appendLog(`▶ Starting SeatGeek pull — type: ${eventType || 'all'}, pages: ${maxP}`, 'green');
     appendLog(`  Client ID: ${clientId.slice(0, 12)}…`, 'muted');
