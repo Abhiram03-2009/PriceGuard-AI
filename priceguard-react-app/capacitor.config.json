@@ -1,0 +1,6 @@
+{
+  "appId": "com.priceguard.ai",
+  "appName": "PriceGuard AI",
+  "webDir": "build",
+  "bundledWebRuntime": false
+}

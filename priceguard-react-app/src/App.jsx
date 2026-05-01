@@ -17,6 +17,7 @@ function SI({ col, sortCol, sortDir }) {
 export default function App() {
   const [loading,    setLoading]    = useState(true);
   const [tab,        setTab]        = useState('dashboard');
+  const [dataMode,   setDataMode]   = useState('public');
   const [rawData,    setRawData]    = useState(null);
   const [results,    setResults]    = useState(null);
   const [analyzing,  setAnalyzing]  = useState(false);
@@ -122,6 +123,27 @@ export default function App() {
         {tab === 'dashboard' && (
           <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
 
+            {/* Mode Toggle */}
+            {!rawData && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', background: 'rgba(24,168,255,0.05)', border: '1px solid var(--b1)', borderRadius: '8px', padding: '4px' }}>
+                  <button 
+                    className={`nav-tab ${dataMode === 'public' ? 'act' : ''}`} 
+                    onClick={() => setDataMode('public')}
+                  >
+                    Public Event Analysis
+                  </button>
+                  <button 
+                    className={`nav-tab ${dataMode === 'enterprise' ? 'act' : ''}`} 
+                    onClick={() => setDataMode('enterprise')}
+                    style={dataMode === 'enterprise' ? { borderColor: 'rgba(255,54,104,0.3)', color: 'var(--p)', background: 'rgba(255,54,104,0.1)' } : {}}
+                  >
+                    Team/Enterprise Portal
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Upload zone */}
             {!rawData && (
               <div
@@ -130,16 +152,27 @@ export default function App() {
                 onDragLeave={() => setDrag(false)}
                 onDrop={e => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; f?.name.endsWith('.csv') ? parseFile(f) : add('CSV files only', 'error'); }}
                 onClick={() => fileRef.current?.click()}
+                style={dataMode === 'enterprise' ? { borderColor: 'rgba(255,54,104,0.3)', background: 'rgba(255,54,104,0.02)' } : {}}
               >
-                <div className="upload-icon">⬆</div>
-                <div className="upload-title">Drop your event CSV here</div>
-                <div className="upload-sub">Accepts SeatGeek, Ticketmaster, or any ticketing platform export. Missing price columns are inferred from demand signals automatically.</div>
+                <div className="upload-icon" style={dataMode === 'enterprise' ? { color: 'var(--p)', opacity: 0.8 } : {}}>
+                  {dataMode === 'enterprise' ? '🔒' : '⬆'}
+                </div>
+                <div className="upload-title">
+                  {dataMode === 'enterprise' ? 'Secure Team Data Upload' : 'Drop your event CSV here'}
+                </div>
+                <div className="upload-sub">
+                  {dataMode === 'enterprise' 
+                    ? 'Upload internal company inventory to analyze protected pricing and revenue leakages.'
+                    : 'Accepts SeatGeek, Ticketmaster, or any ticketing platform export. Missing price columns are inferred from demand signals automatically.'}
+                </div>
                 <div className="field-pills">
                   {['event_id', 'title', 'venue', 'city', 'state', 'datetime', 'popularity', 'listing_count', 'lowest_price', 'average_price', 'highest_price'].map(f => (
-                    <span key={f} className="fp">{f}</span>
+                    <span key={f} className="fp" style={dataMode === 'enterprise' ? { color: 'var(--p)', borderColor: 'rgba(255,54,104,0.3)', background: 'rgba(255,54,104,0.08)' } : {}}>{f}</span>
                   ))}
+                  {dataMode === 'enterprise' && <span className="fp" style={{ color: 'var(--p)', borderColor: 'rgba(255,54,104,0.3)', background: 'rgba(255,54,104,0.08)' }}>internal_cost</span>}
+                  {dataMode === 'enterprise' && <span className="fp" style={{ color: 'var(--p)', borderColor: 'rgba(255,54,104,0.3)', background: 'rgba(255,54,104,0.08)' }}>team_id</span>}
                 </div>
-                <button className="btn btn-pri btn-sm" onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}>Browse Files</button>
+                <button className="btn btn-pri btn-sm" onClick={e => { e.stopPropagation(); fileRef.current?.click(); }} style={dataMode === 'enterprise' ? { color: 'var(--p)', borderColor: 'var(--p)', boxShadow: '0 0 14px rgba(255,54,104,0.2)' } : {}}>Browse Files</button>
                 <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => parseFile(e.target.files[0])} />
               </div>
             )}
