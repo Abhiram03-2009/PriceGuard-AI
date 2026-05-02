@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import { ForecastChart, ScatterLinChart, HBar, VBar, Donut } from './components/Charts';
 import { useToast, ToastContainer } from './components/Toast';
 import FetchTab from './components/FetchTab';
+import MarketTab from './components/MarketTab';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function SI({ col, sortCol, sortDir }) {
@@ -28,6 +29,7 @@ export default function App() {
   const [page,       setPage]       = useState(1);
   const [drag,       setDrag]       = useState(false);
   const [consoleMsgs, setConsoleMsgs] = useState([]);
+  const [previewData, setPreviewData] = useState(null);
   const fileRef = useRef();
   const { toasts, add } = useToast();
 
@@ -374,7 +376,7 @@ export default function App() {
 
         {/* ────────────── FETCH DATA ────────────── */}
         {tab === 'fetch' && (
-          <FetchTab onDataLoaded={onFetchedData} add={add} />
+          <FetchTab onDataLoaded={onFetchedData} add={add} setPreviewData={setPreviewData} />
         )}
 
         {/* ────────────── ANALYSIS ────────────── */}
@@ -429,8 +431,8 @@ export default function App() {
             <div className="card-hd">
               <div className="card-title">All Events ({results.totalEvents})</div>
               <div style={{ display: 'flex', gap: 7 }}>
-                <button className="dl-btn" onClick={() => { dlCSV(results.arbEvents, 'arb_' + new Date().toISOString().split('T')[0] + '.csv'); add('Arbitrage report downloaded'); }}>↓ Arb Report</button>
-                <button className="dl-btn bl" onClick={() => { dlCSV(results.processed, 'full_' + new Date().toISOString().split('T')[0] + '.csv'); add('Full dataset downloaded'); }}>↓ Full CSV</button>
+                <button className="dl-btn" onClick={() => setPreviewData({ name: 'Arbitrage_Report.csv', rows: results.arbEvents })}>🛡 Preview & Download Report</button>
+                <button className="dl-btn bl" onClick={() => setPreviewData({ name: 'Full_Dataset.csv', rows: results.processed })}>⚡ Preview & Download Full CSV</button>
               </div>
             </div>
             <div style={{ padding: '.7rem 1.35rem', borderBottom: '1px solid var(--b1)' }}>
@@ -655,8 +657,57 @@ export default function App() {
             {dataMode === 'enterprise' ? 'SECURE CHANNEL ENCRYPTED' : 'PUBLIC ANALYTICS MODE'}
           </span>
         </div>
-        <span>Ensemble RF+GBM · Date-seeded {new Date().toISOString().split('T')[0]}</span>
+        <span>Ensemble RF+GBM · Finalized Build v1.1.3 · {new Date().toISOString().split('T')[0]}</span>
       </footer>
+
+      {previewData && (
+        <div className="modal-overlay" onClick={() => setPreviewData(null)}>
+          <div className="modal fade" onClick={e => e.stopPropagation()}>
+            <div className="modal-hd">
+              <div className="card-title">Dataset Preview: {previewData.name}</div>
+              <button className="modal-close" onClick={() => setPreviewData(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="tbl-wrap">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      {Object.keys(previewData.rows[0] || {}).map(k => <th key={k}>{k}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.rows.slice(0, 50).map((r, i) => (
+                      <tr key={i}>
+                        {Object.values(r).map((v, j) => <td key={j} className="mono" style={{ fontSize: '11px' }}>{String(v)}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {previewData.rows.length > 50 && (
+                <div style={{ marginTop: '1rem', color: 'var(--t3)', fontSize: '11px', textAlign: 'center' }}>
+                  Showing first 50 of {previewData.rows.length} rows. Download for full dataset.
+                </div>
+              )}
+            </div>
+            <div className="card-hd" style={{ justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn btn-ghost" onClick={() => setPreviewData(null)}>Close</button>
+              <button className="btn btn-pri" onClick={() => {
+                const csv = [
+                  Object.keys(previewData.rows[0]).join(','),
+                  ...previewData.rows.map(r => Object.values(r).join(','))
+                ].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = previewData.name;
+                a.click();
+              }}>Download Full CSV</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
