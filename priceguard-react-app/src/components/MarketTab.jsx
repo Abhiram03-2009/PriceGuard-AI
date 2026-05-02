@@ -11,7 +11,7 @@ export default function MarketTab({ results }) {
         <div className="card-body" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
           <div style={{ fontSize: '40px', marginBottom: '1rem' }}>📊</div>
           <div className="card-title">Market Analysis Unavailable</div>
-          <div style={{ color: 'var(--t3)', maxWidth: '400px', margin: '0 auto', marginTop: '0.5rem' }}>
+          <div style={{ color: '#fff', maxWidth: '400px', margin: '0 auto', marginTop: '0.5rem' }}>
             Please upload a dataset and run AI Analysis to unlock deep market insights and arbitrage heatmaps.
           </div>
         </div>
@@ -32,7 +32,7 @@ export default function MarketTab({ results }) {
       label: 'Arbitrage Frequency',
       data: topCities.map(c => c[1]),
       backgroundColor: 'rgba(24, 168, 255, 0.5)',
-      borderColor: 'var(--b)',
+      borderColor: '#18a8ff',
       borderWidth: 1,
     }]
   };
@@ -51,7 +51,7 @@ export default function MarketTab({ results }) {
 
         <div className="market-box" style={{ textAlign: 'center' }}>
           <div className="card-title">Market Risk Index</div>
-          <div style={{ fontSize: '48px', fontWeight: 800, color: riskScore > 10 ? 'var(--p)' : 'var(--g)', marginTop: '2rem' }}>
+          <div style={{ fontSize: '48px', fontWeight: 800, color: riskScore > 10 ? '#ff3668' : '#00d68f', marginTop: '2rem' }}>
             {riskScore}<span style={{ fontSize: '20px' }}>%</span>
           </div>
           <div className="sec-lbl" style={{ justifyContent: 'center', marginTop: '0.5rem' }}>Overall Arbitrage Density</div>
@@ -60,12 +60,12 @@ export default function MarketTab({ results }) {
               className="risk-meter-fill" 
               style={{ 
                 width: `${riskScore}%`, 
-                background: `linear-gradient(90deg, var(--g), var(--a), var(--p))`,
-                boxShadow: `0 0 15px ${riskScore > 10 ? 'var(--p)' : 'var(--g)'}`
+                background: `linear-gradient(90deg, #00d68f, #f5a623, #ff3668)`,
+                boxShadow: `0 0 15px ${riskScore > 10 ? '#ff3668' : '#00d68f'}`
               }} 
             />
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6 }}>
+          <div style={{ fontSize: '11px', color: '#fff', lineHeight: 1.6 }}>
             {riskScore > 10 
               ? "HIGH RISK: Significant secondary market manipulation detected across multiple nodes." 
               : "STABLE: Market pricing aligns with fair value projections."}
@@ -104,7 +104,7 @@ export default function MarketTab({ results }) {
                    labels: ['Demand Vectors', 'Supply Scarcity', 'Price Outliers', 'Historical Trend'],
                    datasets: [{
                      data: [35, 25, 25, 15],
-                     backgroundColor: ['var(--b)', 'var(--p)', 'var(--g)', 'var(--a)'],
+                     backgroundColor: ['#18a8ff', '#ff3668', '#00d68f', '#f5a623'],
                      borderWidth: 0
                    }]
                  }}
