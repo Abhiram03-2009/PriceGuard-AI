@@ -43,7 +43,7 @@ function dlCSVRaw(rows, filename) {
   URL.revokeObjectURL(a.href);
 }
 
-export default function FetchTab({ onDataLoaded, add }) {
+export default function FetchTab({ onDataLoaded, add, setPreviewData }) {
   const [clientId,    setClientId]    = useState('NTUxNzM5NjJ8MTc2NjkyNjQzNy4yMDE5MTAz');
   const [eventType,   setEventType]   = useState('sports');
   const [sportSub,    setSportSub]    = useState('');
@@ -320,8 +320,8 @@ export default function FetchTab({ onDataLoaded, add }) {
             }
             {fetchedRows.length > 0 && !fetching && (
               <>
-                <button className="dl-btn" onClick={doDownload}>↓ Download CSV ({fetchedRows.length} rows)</button>
-                <button className="dl-btn bl" onClick={doLoadIntoApp}>⚡ Load into Dashboard</button>
+                <button className="dl-btn" onClick={() => setPreviewData({ name: 'SeatGeek_Fetch.csv', rows: fetchedRows })}>↓ Preview & Download ({fetchedRows.length})</button>
+                <button className="dl-btn bl" onClick={doLoadIntoApp}>⚡ Load Dashboard</button>
               </>
             )}
           </div>
@@ -370,7 +370,7 @@ export default function FetchTab({ onDataLoaded, add }) {
           <div className="card-hd">
             <div className="card-title">Fetch Results</div>
             <div style={{ display: 'flex', gap: 7 }}>
-              <button className="dl-btn" onClick={doDownload}>↓ Download CSV</button>
+              <button className="dl-btn" onClick={() => setPreviewData({ name: 'SeatGeek_Fetch.csv', rows: fetchedRows })}>↓ Preview & Download</button>
               <button className="dl-btn bl" onClick={doLoadIntoApp}>⚡ Load into Dashboard → Run Analysis</button>
             </div>
           </div>

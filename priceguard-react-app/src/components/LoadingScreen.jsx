@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import logo from '../logo.png';
 
-// Each line animates in sequence, typed out character by character
 const LINES = [
   { text: 'Arbitrage Intelligence.', delay: 0.3, cls: 'line1' },
-  { text: 'Your powerful tool to detect arbitrage and prevent secondary market resale.', delay: 1.5, cls: 'line2' },
-  { text: 'Real-time pricing intelligence. Corrected before it costs you.', delay: 3.1, cls: 'line3' },
+  { text: 'Detect. Predict. Prevent.', delay: 1.5, cls: 'line2' },
+  { text: 'Ready for full scan.', delay: 3.1, cls: 'line3' },
 ];
 
 export default function LoadingScreen() {
   const [barDone, setBarDone] = useState(false);
 
   useEffect(() => {
-    // bar animation is 3.8s
     const t = setTimeout(() => setBarDone(true), 3800);
     return () => clearTimeout(t);
   }, []);
