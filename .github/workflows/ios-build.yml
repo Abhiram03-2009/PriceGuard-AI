@@ -54,9 +54,16 @@ jobs:
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
+          # ADD the temporary keychain to the search list so xcodebuild can find it
+          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | sed s/\"//g)
+          security default-keychain -s $KEYCHAIN_PATH
+
           # import certificate to keychain
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # verify certificate was imported
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
 
           # apply provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
@@ -75,6 +82,7 @@ jobs:
             -sdk iphoneos \
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
+            -destination generic/platform=iOS \
             archive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=$TEAM_ID \
@@ -82,13 +90,14 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="$PP_UUID" \
             CODE_SIGN_IDENTITY="Apple Distribution"
 
+          # Inject provisioning profile mapping into exportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" exportOptions.plist || true
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.priceguard.ai string $PP_UUID" exportOptions.plist || true
+
           # Export IPA
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" exportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.priceguard.ai string $PP_UUID" exportOptions.plist
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
-            -exportPath $RUNNER_TEMP/build
             -exportPath $RUNNER_TEMP/build
 
       - name: Upload to App Store Connect
