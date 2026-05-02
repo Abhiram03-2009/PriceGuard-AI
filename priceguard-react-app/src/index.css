@@ -63,8 +63,8 @@ body::before {
 @keyframes slidein { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes blink { 0%, 100% { border-color: var(--b); } 50% { border-color: transparent; } }
 
-/* ── TYPEWRITER ── */
-@keyframes typewriter-1 { 0% { width: 0; } 100% { width: 100%; } }
+/* ── TYPEWRITER (iOS-compatible) ── */
+@keyframes typewriter-1 { 0% { max-width: 0; } 100% { max-width: 800px; } }
 @keyframes cursor-blink { 0%, 100% { border-color: var(--b); } 50% { border-color: transparent; } }
 
 #root { position: relative; z-index: 1; }
@@ -80,23 +80,27 @@ body::before {
 .loading {
   position: fixed; inset: 0; z-index: 9999; background: var(--bg0);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 .load-logo-wrap { margin-bottom: 32px; }
 .load-logo {
   width: 100px; height: 100px; border-radius: 50%;
   border: 2px solid rgba(24, 168, 255, 0.6);
   position: relative; overflow: hidden;
+  -webkit-animation: logoglow 2.5s ease-in-out infinite;
   animation: logoglow 2.5s ease-in-out infinite;
 }
 .load-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .load-logo-ring {
   position: absolute; inset: -2px; border-radius: 50%;
   background: conic-gradient(transparent 0deg, rgba(24, 168, 255, 0.5) 55deg, transparent 110deg);
+  -webkit-animation: spin 2.5s linear infinite;
   animation: spin 2.5s linear infinite;
 }
 .load-logo-ring2 {
   position: absolute; inset: -4px; border-radius: 50%;
   background: conic-gradient(transparent 0deg, rgba(0, 229, 204, 0.25) 40deg, transparent 80deg);
+  -webkit-animation: spin 4s linear infinite reverse;
   animation: spin 4s linear infinite reverse;
 }
 .load-title {
@@ -106,33 +110,39 @@ body::before {
 }
 .load-taglines {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  margin-bottom: 36px; min-height: 80px;
+  margin-bottom: 36px; min-height: 80px; padding: 0 1rem;
 }
 .tagline {
   font-family: var(--fm); font-size: 13px; color: var(--t2);
   overflow: hidden; white-space: nowrap;
   border-right: 1.5px solid transparent;
-  width: 0;
+  max-width: 0; display: inline-block;
 }
 .tagline.line1 {
   color: var(--b); font-size: 15px; font-weight: 600; letter-spacing: 0.5px;
-  animation: typewriter-1 0.9s steps(28, end) 0.3s forwards, cursor-blink 0.7s step-end 0.3s;
+  -webkit-animation: typewriter-1 0.9s ease 0.3s forwards, cursor-blink 0.7s step-end 0.3s;
+  animation: typewriter-1 0.9s ease 0.3s forwards, cursor-blink 0.7s step-end 0.3s;
   border-right-color: transparent;
+  -webkit-animation-fill-mode: forwards;
   animation-fill-mode: forwards;
 }
-.tagline.line1.done { border-right-color: transparent; width: auto; }
+.tagline.line1.done { border-right-color: transparent; max-width: none; }
 .tagline.line2 {
   color: var(--t1); font-size: 13px;
-  animation: typewriter-1 1.2s steps(52, end) 1.5s forwards;
+  -webkit-animation: typewriter-1 1.2s ease 1.5s forwards;
+  animation: typewriter-1 1.2s ease 1.5s forwards;
+  -webkit-animation-fill-mode: forwards;
   animation-fill-mode: forwards;
 }
 .tagline.line3 {
   color: var(--t3); font-size: 12px;
-  animation: typewriter-1 0.9s steps(40, end) 3s forwards, cursor-blink 0.7s step-end 3s 8;
+  -webkit-animation: typewriter-1 0.9s ease 3s forwards, cursor-blink 0.7s step-end 3s 8;
+  animation: typewriter-1 0.9s ease 3s forwards, cursor-blink 0.7s step-end 3s 8;
+  -webkit-animation-fill-mode: forwards;
   animation-fill-mode: forwards;
 }
 .load-bar-wrap { width: 240px; height: 1.5px; background: rgba(24, 168, 255, 0.1); border-radius: 2px; overflow: hidden; margin-bottom: 14px; }
-.load-bar { height: 100%; background: linear-gradient(90deg, var(--bd), var(--b), var(--c)); animation: loadbar 3.8s ease forwards; }
+.load-bar { height: 100%; background: linear-gradient(90deg, var(--bd), var(--b), var(--c)); -webkit-animation: loadbar 3.8s ease forwards; animation: loadbar 3.8s ease forwards; }
 .load-status { font-family: var(--fm); font-size: 10px; color: var(--t3); letter-spacing: 2px; }
 
 /* ── NAVBAR ── */
