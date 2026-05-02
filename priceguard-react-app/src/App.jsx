@@ -30,6 +30,9 @@ export default function App() {
   const [drag,       setDrag]       = useState(false);
   const [consoleMsgs, setConsoleMsgs] = useState([]);
   const [previewData, setPreviewData] = useState(null);
+  const [showChat,    setShowChat]    = useState(false);
+  const [chatMsgs,    setChatMsgs]    = useState([{ role: 'ai', text: 'Hello! I am PriceGuard AI. How can I help you optimize your pricing today?' }]);
+  const [chatIn,      setChatIn]      = useState('');
   const fileRef = useRef();
   const { toasts, add } = useToast();
 
@@ -129,6 +132,47 @@ export default function App() {
   return (
     <div className="app">
       <div className="orb o1" /><div className="orb o2" /><div className="orb o3" />
+      
+      {/* ── CHATBOT ── */}
+      <div className="chat-trigger" onClick={() => setShowChat(!showChat)}>
+        <span style={{ fontSize: '24px' }}>🤖</span>
+      </div>
+      {showChat && (
+        <div className="chat-window">
+          <div className="modal-hd">
+            <div className="card-title">AI Assistant</div>
+            <button className="modal-close" onClick={() => setShowChat(false)}>×</button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column' }}>
+            {chatMsgs.map((m, i) => (
+              <div key={i} className={`chat-msg ${m.role === 'ai' ? 'chat-ai' : 'chat-user'}`}>
+                {m.text}
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: '10px', borderTop: '1px solid var(--b1)', display: 'flex', gap: '8px' }}>
+            <input 
+              className="fi" 
+              style={{ flex: 1 }} 
+              placeholder="Ask for suggestions..." 
+              value={chatIn}
+              onChange={e => setChatIn(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && chatIn.trim()) {
+                  const uMsg = chatIn.trim();
+                  setChatMsgs(prev => [...prev, { role: 'user', text: uMsg }]);
+                  setChatIn('');
+                  setTimeout(() => {
+                    let resp = "I suggest analyzing the market volatility vectors for potential revenue recovery.";
+                    if (results) resp = `Found ${results.arbEvents.length} arbitrage events. Focus on ${results.arbEvents[0]?.city} for maximum margin capture.`;
+                    setChatMsgs(prev => [...prev, { role: 'ai', text: resp }]);
+                  }, 800);
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
       {analyzing && (
         <div className="radar-container">
           <div className="radar-circle" />
@@ -257,7 +301,7 @@ export default function App() {
                         </tbody>
                       </table>
                     </div>
-                    {rawData.length > 5 && <div style={{ fontFamily: 'var(--fm)', fontSize: '10px', color: 'var(--t3)', marginTop: 7 }}>+{rawData.length - 5} more rows…</div>}
+                    {rawData.length > 5 && <div style={{ fontFamily: 'var(--fm)', fontSize: '10px', color: '#fff', marginTop: 7 }}>+{rawData.length - 5} more rows…</div>}
                   </div>
                 )}
               </div>
@@ -270,20 +314,20 @@ export default function App() {
                   <div className="card">
                     <div className="card-hd">
                       <div className="card-title">Arbitrage Rate — Today + 7-Day Forecast</div>
-                      <span className="mono" style={{ fontSize: '9px', color: 'var(--t3)' }}>TODAY: {(results.arbRate * 100).toFixed(1)}%</span>
+                      <span className="mono" style={{ fontSize: '9px', color: '#fff' }}>TODAY: {(results.arbRate * 100).toFixed(1)}%</span>
                     </div>
                     <div className="card-body">
                       <ForecastChart series={results.forecastSeries} />
                       <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: 'var(--fm)', fontSize: '10px', color: 'var(--t3)' }}><span style={{ color: 'var(--b)', marginRight: 4 }}>●</span>Historical + Today</span>
-                        <span style={{ fontFamily: 'var(--fm)', fontSize: '10px', color: 'var(--t3)' }}><span style={{ color: 'var(--a)', marginRight: 4 }}>●</span>Forecast (Exp. Smoothing)</span>
+                        <span style={{ fontFamily: 'var(--fm)', fontSize: '10px', color: '#fff' }}><span style={{ color: 'var(--b)', marginRight: 4 }}>●</span>Historical + Today</span>
+                        <span style={{ fontFamily: 'var(--fm)', fontSize: '10px', color: '#fff' }}><span style={{ color: 'var(--a)', marginRight: 4 }}>●</span>Forecast (Exp. Smoothing)</span>
                       </div>
                     </div>
                   </div>
                   <div className="card">
                     <div className="card-hd">
                       <div className="card-title">Price vs Popularity — OLS Regression</div>
-                      <span className="mono" style={{ fontSize: '9px', color: 'var(--t3)' }}>slope={results.linModel.slope.toFixed(1)}  R²={(results.linModel.r2 * 100).toFixed(1)}%</span>
+                      <span className="mono" style={{ fontSize: '9px', color: '#fff' }}>slope={results.linModel.slope.toFixed(1)}  R²={(results.linModel.r2 * 100).toFixed(1)}%</span>
                     </div>
                     <div className="card-body">
                       <ScatterLinChart popVals={results.popVals} priceVals={results.priceVals} linModel={results.linModel} processed={results.processed} />
@@ -317,7 +361,7 @@ export default function App() {
                           { lbl: 'Total Prevented', val: '$' + results.arbEvents.reduce((s, d) => s + d.prevented_profit, 0).toFixed(0), cl: 'green' },
                         ].map((m, i) => (
                           <div key={i} style={{ background: 'rgba(24,168,255,0.04)', border: '1px solid var(--b1)', borderRadius: 8, padding: '10px 13px' }}>
-                            <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 4 }}>{m.lbl}</div>
+                            <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: '#fff', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 4 }}>{m.lbl}</div>
                             <div style={{ fontFamily: "'Syne'", fontSize: '21px', fontWeight: '700', color: `var(--${m.cl})` }}>{m.val}</div>
                           </div>
                         ))}
@@ -347,7 +391,7 @@ export default function App() {
                 <div className="card">
                   <div className="card-hd">
                     <div className="card-title">Top Arbitrage Opportunities</div>
-                    <span className="mono" style={{ fontSize: '9.5px', color: 'var(--t2)' }}>sorted by margin</span>
+                    <span className="mono" style={{ fontSize: '9.5px', color: '#fff' }}>sorted by margin</span>
                   </div>
                   <div className="card-body">
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '1rem' }}>
@@ -399,7 +443,7 @@ export default function App() {
               <div className="card">
                 <div className="card-hd">
                   <div className="card-title">Price vs Popularity — OLS Regression</div>
-                  <span className="mono" style={{ fontSize: '9px', color: 'var(--t3)' }}>y={results.linModel.slope.toFixed(1)}x + ${results.linModel.intercept.toFixed(0)}  R²={(results.linModel.r2 * 100).toFixed(1)}%</span>
+                  <span className="mono" style={{ fontSize: '9px', color: '#fff' }}>y={results.linModel.slope.toFixed(1)}x + ${results.linModel.intercept.toFixed(0)}  R²={(results.linModel.r2 * 100).toFixed(1)}%</span>
                 </div>
                 <div className="card-body"><ScatterLinChart popVals={results.popVals} priceVals={results.priceVals} linModel={results.linModel} processed={results.processed} /></div>
               </div>
@@ -416,7 +460,7 @@ export default function App() {
               <div className="card">
                 <div className="card-hd">
                   <div className="card-title">Top Markets by Volume</div>
-                  <span className="mono" style={{ fontSize: '9px', color: 'var(--t3)' }}>red = has arbitrage events</span>
+                  <span className="mono" style={{ fontSize: '9px', color: '#fff' }}>red = has arbitrage events</span>
                 </div>
                 <div className="card-body"><HBar labels={results.topCities.map(c => c.city || 'Unknown')} data={results.topCities.map(c => c.count)} colors={results.topCities.map(c => c.arb > 0 ? 'rgba(255,54,104,0.32)' : 'rgba(24,168,255,0.28)')} height={200} /></div>
               </div>
@@ -444,7 +488,7 @@ export default function App() {
                   <option value="MEDIUM">Medium Risk</option>
                   <option value="LOW">Low Risk</option>
                 </select>
-                <span className="mono" style={{ fontSize: '10px', color: 'var(--t3)' }}>{tableData.length} results</span>
+                <span className="mono" style={{ fontSize: '10px', color: '#fff' }}>{tableData.length} results</span>
               </div>
             </div>
             <div className="tbl-wrap">
@@ -467,7 +511,7 @@ export default function App() {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                           <div className="risk-bar" style={{ width: 55 }}><div className="risk-fill" style={{ width: d.risk_score + '%', background: d.risk_score > 55 ? 'var(--p)' : d.risk_score > 27 ? 'var(--a)' : 'var(--g)' }} /></div>
-                          <span className="mono" style={{ fontSize: '10px', color: 'var(--t3)' }}>{d.risk_score?.toFixed(0)}</span>
+                          <span className="mono" style={{ fontSize: '10px', color: '#fff' }}>{d.risk_score?.toFixed(0)}</span>
                         </div>
                       </td>
                       <td><span className={`badge ${d.arbitrage === 1 ? (d.arbitrage_tier === 'HIGH' ? 'b-high' : 'b-med') : 'b-safe'}`}>{d.arbitrage === 1 ? d.arbitrage_tier : 'SAFE'}</span></td>
@@ -528,12 +572,12 @@ export default function App() {
                     {['HIGH', 'MEDIUM', 'LOW'].map(tier => {
                       const cnt = results.processed.filter(d => d.arbitrage_tier === tier).length;
                       const pct = cnt / results.totalEvents * 100;
-                      const color = tier === 'HIGH' ? 'var(--p)' : tier === 'MEDIUM' ? 'var(--a)' : 'var(--g)';
+                      const color = tier === 'HIGH' ? '#ff3668' : tier === 'MEDIUM' ? '#f5a623' : '#00d68f';
                       return (
                         <div key={tier} style={{ marginBottom: 13 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontFamily: 'var(--fm)', fontSize: '10px' }}>
                             <span style={{ color }}>{tier} RISK</span>
-                            <span style={{ color: 'var(--t3)' }}>{cnt} ({pct.toFixed(1)}%)</span>
+                            <span style={{ color: '#fff' }}>{cnt} ({pct.toFixed(1)}%)</span>
                           </div>
                           <div className="prog-wrap"><div className="prog" style={{ width: pct + '%', background: color }} /></div>
                         </div>
@@ -548,7 +592,7 @@ export default function App() {
                       ].map(m => (
                         <div key={m.lbl} style={{ background: 'rgba(24,168,255,0.03)', border: '1px solid var(--b1)', borderRadius: 7, padding: '10px', textAlign: 'center' }}>
                           <div style={{ fontFamily: "'Syne'", fontSize: '20px', fontWeight: '700', color: `var(--${m.cl})` }}>{m.val}</div>
-                          <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginTop: 2, textTransform: 'uppercase', letterSpacing: 1 }}>{m.lbl}</div>
+                          <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: '#fff', marginTop: 2, textTransform: 'uppercase', letterSpacing: 1 }}>{m.lbl}</div>
                         </div>
                       ))}
                     </div>
@@ -592,7 +636,7 @@ export default function App() {
                   <div className="card"><div className="card-hd"><div className="card-title">Regression Metrics</div></div><div className="card-body">
                     {[['R²', (results.r2 * 100).toFixed(2) + '%', 'blue'], ['MAE', '$' + results.mae.toFixed(2), 'pink'], ['RMSE', '$' + results.rmse.toFixed(2), 'amber']].map(([l, v, c]) => (
                       <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--b1)' }}>
-                        <span className="mono" style={{ fontSize: '11px', color: 'var(--t3)' }}>{l}</span>
+                        <span className="mono" style={{ fontSize: '11px', color: '#fff' }}>{l}</span>
                         <span className={`mono w700 ${c}`} style={{ fontSize: '13px' }}>{v}</span>
                       </div>
                     ))}
@@ -600,7 +644,7 @@ export default function App() {
                   <div className="card"><div className="card-hd"><div className="card-title">Classifier Metrics</div></div><div className="card-body">
                     {[['F1', (results.f1 * 100).toFixed(2) + '%', 'green'], ['Precision', (results.precision * 100).toFixed(2) + '%', 'cyan'], ['Recall', (results.recall * 100).toFixed(2) + '%', 'amber']].map(([l, v, c]) => (
                       <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--b1)' }}>
-                        <span className="mono" style={{ fontSize: '11px', color: 'var(--t3)' }}>{l}</span>
+                        <span className="mono" style={{ fontSize: '11px', color: '#fff' }}>{l}</span>
                         <span className={`mono w700 ${c}`} style={{ fontSize: '13px' }}>{v}</span>
                       </div>
                     ))}
@@ -608,7 +652,7 @@ export default function App() {
                   <div className="card"><div className="card-hd"><div className="card-title">Configuration</div></div><div className="card-body">
                     {[['Arb Threshold', '$18.00'], ['RF Trees', '28'], ['GBM Rounds', '22'], ['GBM LR', '0.11'], ['Ensemble', '58/42 RF/GBM'], ['Forecast', '7 days']].map(([l, v]) => (
                       <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--b1)' }}>
-                        <span className="mono" style={{ fontSize: '11px', color: 'var(--t3)' }}>{l}</span>
+                        <span className="mono" style={{ fontSize: '11px', color: '#fff' }}>{l}</span>
                         <span className="mono w700 blue" style={{ fontSize: '13px' }}>{v}</span>
                       </div>
                     ))}
@@ -627,7 +671,7 @@ export default function App() {
                       <div key={f.n} style={{ background: 'rgba(24,168,255,0.025)', border: '1px solid var(--b1)', borderRadius: 8, padding: '11px' }}>
                         <div className="mono" style={{ color: 'var(--b)', fontSize: '11px', fontWeight: '600', marginBottom: 4 }}>{f.n}</div>
                         <div className="mono" style={{ color: 'var(--a)', fontSize: '10px', marginBottom: 5, lineHeight: 1.5 }}>{f.f}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--t2)', lineHeight: 1.6 }}>{f.d}</div>
+                        <div style={{ fontSize: '12px', color: '#fff', lineHeight: 1.6 }}>{f.d}</div>
                       </div>
                     ))}
                   </div>
@@ -642,7 +686,7 @@ export default function App() {
           <div className="fade" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
             <div style={{ fontSize: '40px', marginBottom: 14, opacity: 0.25 }}>⚡</div>
             <div style={{ fontFamily: "'Syne'", fontSize: '18px', fontWeight: '700', color: 'var(--b)', marginBottom: 7 }}>Run Analysis First</div>
-            <div className="mono" style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: 18 }}>Dashboard → upload CSV → Run AI Analysis</div>
+            <div className="mono" style={{ fontSize: '11px', color: '#fff', marginBottom: 18 }}>Dashboard → upload CSV → Run AI Analysis</div>
             <button className="btn btn-pri btn-sm" onClick={() => setTab('dashboard')}>← Dashboard</button>
           </div>
         )}
@@ -652,11 +696,11 @@ export default function App() {
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
           <span>PriceGuard AI · Ticket Arbitrage Intelligence Platform</span>
           <span style={{ opacity: 0.5 }}>|</span>
-          <span style={{ color: dataMode === 'enterprise' ? 'var(--p)' : 'var(--b)' }}>
+          <span style={{ color: dataMode === 'enterprise' ? '#ff3668' : '#18a8ff' }}>
             {dataMode === 'enterprise' ? 'SECURE CHANNEL ENCRYPTED' : 'PUBLIC ANALYTICS MODE'}
           </span>
         </div>
-        <span>Ensemble RF+GBM · Finalized Build v1.1.3 · {new Date().toISOString().split('T')[0]}</span>
+        <span>Ensemble RF+GBM · Finalized Build v1.1.5 · {new Date().toISOString().split('T')[0]}</span>
       </footer>
 
       {previewData && (
@@ -684,7 +728,7 @@ export default function App() {
                 </table>
               </div>
               {previewData.rows.length > 50 && (
-                <div style={{ marginTop: '1rem', color: 'var(--t3)', fontSize: '11px', textAlign: 'center' }}>
+                <div style={{ marginTop: '1rem', color: '#fff', fontSize: '11px', textAlign: 'center' }}>
                   Showing first 50 of {previewData.rows.length} rows. Download for full dataset.
                 </div>
               )}
@@ -694,14 +738,21 @@ export default function App() {
               <button className="btn btn-pri" onClick={() => {
                 const csv = [
                   Object.keys(previewData.rows[0]).join(','),
-                  ...previewData.rows.map(r => Object.values(r).join(','))
+                  ...previewData.rows.map(r => Object.values(r).map(v => typeof v === 'string' && v.includes(',') ? `"${v}"` : v).join(','))
                 ].join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
+                a.style.display = 'none';
                 a.href = url;
-                a.download = previewData.name;
+                a.setAttribute('download', previewData.name);
+                document.body.appendChild(a);
                 a.click();
+                setTimeout(() => {
+                  document.body.removeChild(a);
+                  window.URL.revokeObjectURL(url);
+                }, 100);
+                add('Download started...');
               }}>Download Full CSV</button>
             </div>
           </div>
