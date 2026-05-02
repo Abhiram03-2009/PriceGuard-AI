@@ -111,7 +111,11 @@ body::before {
 }
 .load-taglines {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  margin-bottom: 36px; min-height: 80px; padding: 0 1rem;
+  margin-bottom: 36px; min-height: 80px; padding: 0 1rem; width: 100%;
+}
+@media (max-width: 480px) {
+  .tagline { font-size: 11px !important; }
+  .tagline.line1 { font-size: 13px !important; }
 }
 .tagline {
   font-family: var(--fm); font-size: 13px; color: var(--t2);
@@ -149,8 +153,8 @@ body::before {
 /* ── NAVBAR ── */
 .navbar {
   position: sticky; top: 0; z-index: 100;
-  padding-top: env(safe-area-inset-top);
-  min-height: calc(56px + env(safe-area-inset-top));
+  padding-top: calc(env(safe-area-inset-top) + 12px);
+  min-height: calc(72px + env(safe-area-inset-top));
   background: rgba(3, 9, 18, 0.95); backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--b1); padding-left: 1.5rem; padding-right: 1.5rem;
   display: flex; align-items: center; justify-content: space-between;
@@ -182,7 +186,7 @@ body::before {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(230, 248, 255, 0.95);
-  line-height: 1;
+  line-height: 1.1;
   -webkit-text-stroke: 0.45px rgba(120, 210, 255, 0.75);
   text-shadow:
     0 0 8px rgba(0, 230, 255, 0.45),
@@ -490,6 +494,43 @@ select.fi option {
 }
 .toggle.on .toggle-knob {
   background: var(--g); transform: translateX(18px);
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 2rem;
+  animation: fadein 0.3s ease;
+}
+.modal {
+  background: var(--bg1); border: 1px solid var(--b1); border-radius: 16px;
+  width: 100%; max-width: 900px; max-height: 85vh; overflow: hidden;
+  display: flex; flex-direction: column; position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+.modal-hd {
+  padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--b1);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02);
+}
+.modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+.modal-close {
+  background: none; border: none; color: var(--t3); font-size: 24px;
+  cursor: pointer; transition: all 0.2s;
+}
+.modal-close:hover { color: var(--p); transform: rotate(90deg); }
+
+/* ── MARKET TAB ── */
+.market-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+.risk-meter {
+  width: 100%; height: 12px; background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px; overflow: hidden; position: relative; margin: 1.5rem 0;
+}
+.risk-meter-fill { height: 100%; transition: width 1s ease-out; }
+.market-box {
+  background: linear-gradient(135deg, rgba(24, 168, 255, 0.05), transparent);
+  border: 1px solid var(--b1); border-radius: 12px; padding: 1.5rem;
 }
 
 footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 9, 18, 0.5); font-family: var(--fm); font-size: 9.5px; color: var(--t3); }

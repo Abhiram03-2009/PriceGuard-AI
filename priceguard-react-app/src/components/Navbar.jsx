@@ -5,6 +5,7 @@ const TABS = [
   ['dashboard', 'Dashboard'],
   ['fetch',     '⬇ Fetch Data'],
   ['analysis',  'Analysis'],
+  ['market',    'Market Analysis'],
   ['events',    'Events'],
   ['insights',  'Insights'],
   ['model',     'Model'],
