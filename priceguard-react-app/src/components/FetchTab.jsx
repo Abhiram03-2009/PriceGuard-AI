@@ -25,24 +25,6 @@ const SPORTS_TAXONOMY = [
   { value: 'motorsports',         label: 'Motorsports' },
 ];
 
-function dlCSVRaw(rows, filename) {
-  if (!rows.length) return;
-  const cols = Object.keys(rows[0]);
-  const lines = [
-    cols.join(','),
-    ...rows.map(r => cols.map(c => {
-      const v = r[c];
-      if (v === null || v === undefined) return '';
-      if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) return `"${v.replace(/"/g, '""')}"`;
-      return String(v);
-    }).join(','))
-  ];
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: filename });
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
 export default function FetchTab({ onDataLoaded, add, setPreviewData }) {
   const [clientId,    setClientId]    = useState('NTUxNzM5NjJ8MTc2NjkyNjQzNy4yMDE5MTAz');
   const [eventType,   setEventType]   = useState('sports');
@@ -170,13 +152,6 @@ export default function FetchTab({ onDataLoaded, add, setPreviewData }) {
   }, [clientId, eventType, sportSub, maxPages, requirePrices, cityFilter, stateFilter, add, appendLog]);
 
   const doStop = () => { abortRef.current = true; };
-
-  const doDownload = () => {
-    if (!fetchedRows.length) return;
-    const date = new Date().toISOString().split('T')[0];
-    dlCSVRaw(fetchedRows, `seatgeek_${eventType || 'all'}_${date}.csv`);
-    add('CSV downloaded');
-  };
 
   const doLoadIntoApp = () => {
     if (!fetchedRows.length) { add('Fetch data first', 'warn'); return; }

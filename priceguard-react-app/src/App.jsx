@@ -375,9 +375,8 @@ export default function App() {
         )}
 
         {/* ────────────── FETCH DATA ────────────── */}
-        {tab === 'fetch' && (
-          <FetchTab onDataLoaded={onFetchedData} add={add} setPreviewData={setPreviewData} />
-        )}
+        {tab === 'fetch'     && <FetchTab onDataLoaded={onFetchedData} add={add} setPreviewData={setPreviewData} />}
+        {tab === 'market'    && <MarketTab results={results} />}
 
         {/* ────────────── ANALYSIS ────────────── */}
         {tab === 'analysis' && results && (
