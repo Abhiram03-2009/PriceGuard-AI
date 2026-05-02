@@ -2,5 +2,12 @@
   "appId": "com.priceguard.ai",
   "appName": "PriceGuard AI",
   "webDir": "build",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "server": {
+    "allowNavigation": ["api.seatgeek.com"],
+    "iosScheme": "capacitor"
+  },
+  "ios": {
+    "allowsLinkPreview": false
+  }
 }
