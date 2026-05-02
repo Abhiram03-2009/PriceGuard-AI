@@ -16,8 +16,8 @@
   --b1:     rgba(24, 168, 255, 0.13);
   --b2:     rgba(24, 168, 255, 0.32);
   --t1:     #ffffff;
-  --t2:     rgba(255, 255, 255, 0.85);
-  --t3:     rgba(255, 255, 255, 0.65);
+  --t2:     #ffffff;
+  --t3:     #ffffff;
   --fs:     'Inter', system-ui, sans-serif;
   --fh:     'Syne', sans-serif;
   --fm:     'IBM Plex Mono', monospace;
@@ -153,8 +153,8 @@ body::before {
 /* ── NAVBAR ── */
 .navbar {
   position: sticky; top: 0; z-index: 100;
-  padding-top: calc(env(safe-area-inset-top) + 12px);
-  min-height: calc(72px + env(safe-area-inset-top));
+  padding-top: calc(env(safe-area-inset-top) + 45px);
+  min-height: calc(110px + env(safe-area-inset-top));
   background: rgba(3, 9, 18, 0.95); backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--b1); padding-left: 1.5rem; padding-right: 1.5rem;
   display: flex; align-items: center; justify-content: space-between;
@@ -533,4 +533,21 @@ select.fi option {
   border: 1px solid var(--b1); border-radius: 12px; padding: 1.5rem;
 }
 
-footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 9, 18, 0.5); font-family: var(--fm); font-size: 9.5px; color: var(--t3); }
+/* ── CHATBOT ── */
+.chat-trigger {
+  position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+  background: var(--b); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 30px rgba(24, 168, 255, 0.4); border: 2px solid var(--t1); cursor: pointer; z-index: 900;
+  animation: logoglow 2s infinite; transition: all 0.3s;
+}
+.chat-window {
+  position: fixed; bottom: 90px; right: 24px; width: 320px; height: 420px;
+  background: var(--bg2); border: 1px solid var(--b2); border-radius: 16px;
+  display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  z-index: 900; overflow: hidden; animation: slidein 0.3s ease;
+}
+.chat-msg { padding: 8px 12px; border-radius: 12px; margin: 4px 8px; font-size: 12px; max-width: 85%; }
+.chat-ai { background: rgba(24, 168, 255, 0.15); border: 1px solid var(--b1); align-self: flex-start; }
+.chat-user { background: var(--b); color: #fff; align-self: flex-end; }
+
+footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 9, 18, 0.5); font-family: var(--fm); font-size: 9.5px; color: #fff; }
