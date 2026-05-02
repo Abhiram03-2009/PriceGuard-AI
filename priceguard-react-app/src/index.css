@@ -15,13 +15,15 @@
   --gl:     rgba(24, 168, 255, 0.035);
   --b1:     rgba(24, 168, 255, 0.13);
   --b2:     rgba(24, 168, 255, 0.32);
-  --t1:     #ddeeff;
-  --t2:     rgba(178, 215, 255, 0.65);
-  --t3:     rgba(138, 185, 225, 0.42);
+  --t1:     #ffffff;
+  --t2:     rgba(255, 255, 255, 0.85);
+  --t3:     rgba(255, 255, 255, 0.65);
   --fs:     'Inter', system-ui, sans-serif;
   --fh:     'Syne', sans-serif;
   --fm:     'IBM Plex Mono', monospace;
   --fnav:   'Orbitron', system-ui, sans-serif;
+  --security-glow: rgba(255, 54, 104, 0.4);
+  --security-bg: rgba(255, 54, 104, 0.05);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -150,8 +152,14 @@ body::before {
   padding-top: env(safe-area-inset-top);
   min-height: calc(56px + env(safe-area-inset-top));
   background: rgba(3, 9, 18, 0.95); backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--b1); padding-left: 2rem; padding-right: 2rem;
+  border-bottom: 1px solid var(--b1); padding-left: 1.5rem; padding-right: 1.5rem;
   display: flex; align-items: center; justify-content: space-between;
+  transition: all 0.4s ease;
+}
+.navbar.secure {
+  border-bottom-color: rgba(255, 54, 104, 0.3);
+  background: rgba(10, 2, 8, 0.96);
+  box-shadow: 0 4px 30px rgba(255, 54, 104, 0.1);
 }
 .nav-brand { display: flex; align-items: center; gap: 10px; }
 .nav-logo-wrap {
@@ -194,13 +202,24 @@ body::before {
     0 0 38px rgba(24, 168, 255, 0.2);
 }
 .brand-sub { font-family: var(--fm); font-size: 9px; color: var(--t3); letter-spacing: 2px; text-transform: uppercase; }
-.nav-tabs { display: flex; gap: 2px; }
+.nav-tabs { 
+  display: flex; gap: 2px; 
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, black 85%, transparent 100%);
+  padding-right: 20px;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
 .nav-tab {
   padding: 5px 14px; border-radius: 6px; font-family: var(--fs); font-size: 13px; font-weight: 500;
   cursor: pointer; border: 1px solid transparent; transition: all .18s; color: var(--t2); background: none;
+  white-space: nowrap;
 }
 .nav-tab:hover { color: var(--b); border-color: var(--b1); }
 .nav-tab.act { background: rgba(24, 168, 255, 0.09); border-color: var(--b2); color: var(--b); }
+.nav-tab.secure.act { background: rgba(255, 54, 104, 0.12); border-color: rgba(255, 54, 104, 0.4); color: var(--p); }
 .live-badge { display: flex; align-items: center; gap: 6px; font-family: var(--fm); font-size: 10px; color: var(--g); }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g); animation: pulse 2s infinite; }
 
@@ -265,7 +284,7 @@ body::before {
 }
 .dl-btn:hover { background: rgba(0, 214, 143, 0.13); box-shadow: 0 0 14px rgba(0, 214, 143, 0.18); }
 .dl-btn.bl { background: rgba(24, 168, 255, 0.07); border-color: var(--b2); color: var(--b); }
-.dl-btn.bl:hover { background: rgba(24, 168, 255, 0.13); box-shadow: 0 0 14px rgba(24, 168, 255, 0.18); }
+.dl-btn.bl:hover { background: rgba(24, 168, 255, 0.13); box-shadow: 0 0 14px rgba(0, 214, 143, 0.18); }
 
 /* ── TABLE ── */
 .tbl-wrap { overflow-x: auto; }
@@ -392,10 +411,52 @@ select.fi option {
 ::-webkit-scrollbar-thumb { background: rgba(24, 168, 255, 0.2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(24, 168, 255, 0.38); }
 
-footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 9, 18, 0.5); font-family: var(--fm); font-size: 9.5px; color: var(--t3); }
-
 @media (max-width: 1200px) { .stat-bar { grid-template-columns: repeat(3, 1fr); } .two-col, .col-32 { grid-template-columns: 1fr; } .three-col { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 768px)  { .stat-bar { grid-template-columns: 1fr 1fr; } .nav-tabs { display: none; } .three-col { grid-template-columns: 1fr; } }
+@media (max-width: 768px)  { 
+  .stat-bar { grid-template-columns: 1fr 1fr; gap: 0.75rem; } 
+  .navbar { padding: 0 1rem; flex-direction: column; height: auto; padding-top: 1rem; gap: 1rem; }
+  .nav-tabs { width: 100%; justify-content: flex-start; padding-bottom: 0.5rem; }
+  .three-col { grid-template-columns: 1fr; } 
+  .main { padding: 1rem; }
+}
+
+/* ── PULSE RADAR ── */
+.radar-container {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 600px; height: 600px; pointer-events: none; z-index: -1; opacity: 0.15;
+}
+.radar-circle {
+  position: absolute; inset: 0; border: 1px solid var(--b); border-radius: 50%;
+  animation: radar-ping 4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.radar-line {
+  position: absolute; top: 50%; left: 50%; width: 50%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--b));
+  transform-origin: left; animation: spin 4s linear infinite;
+}
+@keyframes radar-ping { 0% { transform: scale(0.1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* ── AI CONSOLE ── */
+.ai-console {
+  background: rgba(0, 0, 0, 0.65); border: 1px solid var(--b1); border-radius: 8px;
+  padding: 0.75rem; font-family: var(--fm); font-size: 11px; color: var(--t2);
+  margin-top: 1rem; max-height: 150px; overflow-y: auto;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.ai-line { display: flex; gap: 8px; margin-bottom: 4px; }
+.ai-ts { color: var(--t3); min-width: 65px; }
+.ai-msg { color: var(--b); }
+.ai-msg.secure { color: var(--p); }
+
+/* ── SECURE OVERLAY ── */
+.secure-scan {
+  position: fixed; inset: 0; background: radial-gradient(circle at center, transparent 0%, rgba(255, 54, 104, 0.05) 100%);
+  pointer-events: none; z-index: 999; animation: pulse 4s infinite;
+}
+.secure-grid {
+  position: fixed; inset: 0; background-image: linear-gradient(rgba(255, 54, 104, 0.03) 1px, transparent 1px);
+  background-size: 100% 3px; pointer-events: none; z-index: 1000; opacity: 0.2;
+}
 
 /* ── FETCH TAB ── */
 .fetch-label {
@@ -430,3 +491,5 @@ footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; ju
 .toggle.on .toggle-knob {
   background: var(--g); transform: translateX(18px);
 }
+
+footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 9, 18, 0.5); font-family: var(--fm); font-size: 9.5px; color: var(--t3); }

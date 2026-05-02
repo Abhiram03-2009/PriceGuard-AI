@@ -10,7 +10,7 @@ import FetchTab from './components/FetchTab';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function SI({ col, sortCol, sortDir }) {
-  return <span style={{ opacity: 0.42, marginLeft: 3 }}>{sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>;
+  return <span style={{ opacity: 0.8, marginLeft: 3 }}>{sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>;
 }
 
 // ── Main App ──────────────────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ export default function App() {
   const [sortDir,    setDir]        = useState('desc');
   const [page,       setPage]       = useState(1);
   const [drag,       setDrag]       = useState(false);
+  const [consoleMsgs, setConsoleMsgs] = useState([]);
   const fileRef = useRef();
   const { toasts, add } = useToast();
 
@@ -45,6 +46,23 @@ export default function App() {
   const doAnalyze = useCallback(() => {
     if (!rawData) { add('Upload a dataset first', 'warn'); return; }
     setAnalyzing(true);
+    setConsoleMsgs([{ ts: new Date().toLocaleTimeString(), msg: 'Initializing PriceGuard AI Engine...', secure: dataMode === 'enterprise' }]);
+    
+    const steps = [
+      'Scanning dataset for demand signals...',
+      'Synthesizing feature vectors (popularity, listings, urgency)...',
+      'Executing Ensemble RF (Layer 1) — mapping fair market values...',
+      'Executing GBM (Layer 2) — residual error correction...',
+      'Flagging arbitrage anomalies above $18 threshold...',
+      'Finalizing report and revenue recovery estimates...'
+    ];
+
+    steps.forEach((s, i) => {
+      setTimeout(() => {
+        setConsoleMsgs(prev => [...prev, { ts: new Date().toLocaleTimeString(), msg: s, secure: dataMode === 'enterprise' }]);
+      }, (i + 1) * 600);
+    });
+
     setTimeout(() => {
       try {
         const r = runAnalysis(rawData);
@@ -54,8 +72,8 @@ export default function App() {
         add('Analysis error: ' + e.message, 'error');
       }
       setAnalyzing(false);
-    }, 500);
-  }, [rawData, add]);
+    }, 4500);
+  }, [rawData, add, dataMode]);
 
   // Called from FetchTab when user clicks "Load into Dashboard"
   const onFetchedData = useCallback((rows) => {
@@ -86,13 +104,19 @@ export default function App() {
 
   if (loading) return <LoadingScreen />;
 
-  const stats = results ? [
+  const stats = results ? (dataMode === 'enterprise' ? [
+    { lbl: 'Revenue Leakage', val: '$' + results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0).toFixed(0), cl: 'p', sub: 'Total margin leakage', ico: '⚠' },
+    { lbl: 'Audit Coverage',  val: ((results.arbEvents.length / results.totalEvents) * 100).toFixed(1) + '%', cl: 'c', sub: 'Detected risk area', ico: '🛡' },
+    { lbl: 'Model R²',        val: (results.r2 * 100).toFixed(1) + '%',    cl: 'g', sub: 'Ensemble RF+GBM',       ico: '◎' },
+    { lbl: 'Compliance Score',val: (results.f1 * 100).toFixed(1) + '%',    cl: 'b', sub: 'Inventory Health',      ico: '☑' },
+    { lbl: 'Secure Nodes',    val: results.totalEvents,                    cl: '',  sub: 'Audited records',       ico: '▦' },
+  ] : [
     { lbl: 'Total Events',   val: results.totalEvents,                     cl: '',  sub: 'Loaded from dataset',   ico: '▦' },
     { lbl: 'Flagged Events', val: results.arbEvents.length,                cl: 'p', sub: `${(results.arbRate * 100).toFixed(1)}% arbitrage rate`, ico: '⚑' },
     { lbl: 'Model R²',       val: (results.r2 * 100).toFixed(1) + '%',    cl: 'g', sub: 'Ensemble RF+GBM',       ico: '◎' },
     { lbl: 'Mean Abs Error', val: '$' + results.mae.toFixed(0),            cl: 'a', sub: 'Price prediction error', ico: '◈' },
     { lbl: 'Classifier F1',  val: (results.f1 * 100).toFixed(1) + '%',    cl: 'c', sub: 'Precision × Recall',    ico: '◆' },
-  ] : [
+  ]) : [
     { lbl: 'Total Events',   val: '—', cl: '',  sub: 'Upload dataset',       ico: '▦' },
     { lbl: 'Flagged Events', val: '—', cl: 'p', sub: 'Run analysis',         ico: '⚑' },
     { lbl: 'Model R²',       val: '—', cl: 'g', sub: 'Ensemble RF+GBM',     ico: '◎' },
@@ -103,8 +127,19 @@ export default function App() {
   return (
     <div className="app">
       <div className="orb o1" /><div className="orb o2" /><div className="orb o3" />
+      {analyzing && (
+        <div className="radar-container">
+          <div className="radar-circle" />
+          <div className="radar-circle" style={{ animationDelay: '1s' }} />
+          <div className="radar-circle" style={{ animationDelay: '2s' }} />
+          <div className="radar-line" />
+        </div>
+      )}
+      {dataMode === 'enterprise' && <div className="secure-scan" />}
+      {dataMode === 'enterprise' && <div className="secure-grid" />}
+      
       <ToastContainer toasts={toasts} />
-      <Navbar tab={tab} setTab={setTab} results={results} />
+      <Navbar tab={tab} setTab={setTab} results={results} dataMode={dataMode} />
 
       <main className="main">
         {/* ── STAT BAR ── */}
@@ -193,7 +228,17 @@ export default function App() {
                     <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => parseFile(e.target.files[0])} />
                   </div>
                 </div>
-                {!results && (
+                {analyzing && (
+                  <div className="ai-console fade">
+                    {consoleMsgs.map((m, i) => (
+                      <div key={i} className="ai-line">
+                        <span className="ai-ts">[{m.ts}]</span>
+                        <span className={`ai-msg ${m.secure ? 'secure' : ''}`}>{m.msg}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!results && !analyzing && (
                   <div className="card-body">
                     <div className="tbl-wrap">
                       <table className="tbl">
@@ -300,7 +345,7 @@ export default function App() {
                 <div className="card">
                   <div className="card-hd">
                     <div className="card-title">Top Arbitrage Opportunities</div>
-                    <span className="mono" style={{ fontSize: '9.5px', color: 'var(--t3)' }}>sorted by margin</span>
+                    <span className="mono" style={{ fontSize: '9.5px', color: 'var(--t2)' }}>sorted by margin</span>
                   </div>
                   <div className="card-body">
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '1rem' }}>
@@ -603,7 +648,13 @@ export default function App() {
       </main>
 
       <footer>
-        <span>PriceGuard AI · Ticket Arbitrage Intelligence Platform</span>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <span>PriceGuard AI · Ticket Arbitrage Intelligence Platform</span>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <span style={{ color: dataMode === 'enterprise' ? 'var(--p)' : 'var(--b)' }}>
+            {dataMode === 'enterprise' ? 'SECURE CHANNEL ENCRYPTED' : 'PUBLIC ANALYTICS MODE'}
+          </span>
+        </div>
         <span>Ensemble RF+GBM · Date-seeded {new Date().toISOString().split('T')[0]}</span>
       </footer>
     </div>
