@@ -75,8 +75,8 @@ export default function MarketTab({ results }) {
               <div className="insight-lbl" style={{ color: 'var(--b)' }}>Velocity Vector</div>
               <div style={{ color: '#fff' }}>Current market trends indicate a <strong>{(results.arbRate * 1.8).toFixed(2)}x</strong> increase in secondary market speculation for top-tier events.</div>
             </div>
-            <div className="insight GN" style={{ marginBottom: '1rem', borderLeftColor: 'var(--g)' }}>
-              <div className="insight-lbl GN" style={{ color: 'var(--g)' }}>Audit Integrity</div>
+            <div className="insight gn" style={{ marginBottom: '1rem', borderLeftColor: 'var(--g)' }}>
+              <div className="insight-lbl gn" style={{ color: 'var(--g)' }}>Audit Integrity</div>
               <div style={{ color: '#fff' }}>Ensemble cross-verification successfully filtered out <strong>{Math.round(results.totalEvents * 0.12)}</strong> false positive arbitrage signals.</div>
             </div>
             <div style={{ marginTop: '1.5rem', padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--b1)' }}>
