@@ -118,8 +118,6 @@ export function runAnalysis(rawData) {
   });
 
   const feats = ['lowest_price', 'highest_price', 'listing_count', 'log_listings', 'popularity', 'demand_score', 'price_spread', 'volatility', 'supply_pressure', 'urgency'];
-  // Fair value from demand/supply only — avoids predicting ~average from the same row's lows/highs,
-  // which collapsed arbitrage margin and made risk scores always look LOW.
   const featsDemand = ['listing_count', 'log_listings', 'popularity', 'demand_score', 'supply_pressure', 'urgency'];
   const trainData = df.map(d => ({ x: Object.fromEntries(feats.map(f => [f, d[f]])), y: d.average_price }));
   const trainDemand = df.map(d => ({ x: Object.fromEntries(featsDemand.map(f => [f, d[f]])), y: d.average_price }));
@@ -138,13 +136,11 @@ export function runAnalysis(rawData) {
 
   const processed = df.map((d, i) => {
     const pred = ens[i];
-    // Slightly weight fair value using demand/urgency signals to unveil hidden arbitrage
-    const fairFromDemand = ensFair[i] * (1 + (d.urgency * 0.08) + (d.popularity * 0.05));
+    const fairFromDemand = ensFair[i] * (1 + (d.urgency * 0.05) + (d.popularity * 0.03));
     const margin = fairFromDemand - d.lowest_price;
-    // Dynamic threshold: at least $12 or 12% of the floor price
-    const dynThr = Math.max(12, d.lowest_price * 0.12);
+    // Conservative threshold: at least $22 or 18% of the floor price
+    const dynThr = Math.max(22, d.lowest_price * 0.18);
     const isArb = margin > dynThr;
-    // Scale up the risk score so realistic ticket margins hit MEDIUM/HIGH tiers
     const risk = Math.min(100, Math.max(0, (margin / (d.lowest_price + 1)) * 250));
     const corr = isArb ? Math.min(d.lowest_price + 0.58 * margin, fairFromDemand) : d.lowest_price;
     const prev = isArb ? Math.max(0, fairFromDemand - corr) : 0;
