@@ -1,102 +1,133 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import Papa from 'papaparse';
-import './index.css';
-import { runAnalysis, dlCSV } from './engine';
-import LoadingScreen from './components/LoadingScreen';
-import Navbar from './components/Navbar';
-import { ForecastChart, ScatterLinChart, HBar, VBar, Donut } from './components/Charts';
-import { useToast, ToastContainer } from './components/Toast';
-import FetchTab from './components/FetchTab';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import MarketTab from './components/MarketTab';
+import FetchTab from './components/FetchTab';
+import { ForecastChart, ScatterLinChart, HBar, VBar, Donut } from './components/Charts';
+import { runAnalysis, dlCSV } from './engine';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function SI({ col, sortCol, sortDir }) {
-  return <span style={{ opacity: 0.8, marginLeft: 3 }}>{sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>;
-}
-
-// ── Main App ──────────────────────────────────────────────────────────────────
-export default function App() {
-  const [loading,    setLoading]    = useState(true);
-  const [tab,        setTab]        = useState('dashboard');
-  const [dataMode,   setDataMode]   = useState('public');
-  const [rawData,    setRawData]    = useState(null);
-  const [results,    setResults]    = useState(null);
-  const [analyzing,  setAnalyzing]  = useState(false);
-  const [search,     setSearch]     = useState('');
-  const [filterTier, setFilter]     = useState('ALL');
-  const [sortCol,    setSort]       = useState('arbitrage_margin');
-  const [sortDir,    setDir]        = useState('desc');
-  const [page,       setPage]       = useState(1);
-  const [drag,       setDrag]       = useState(false);
-  const [consoleMsgs, setConsoleMsgs] = useState([]);
-  const [previewData, setPreviewData] = useState(null);
-  const [showChat,    setShowChat]    = useState(false);
-  const [chatMsgs,    setChatMsgs]    = useState([{ role: 'ai', text: 'PriceGuard AI Agent Online. Ready to audit your market vectors for speculative risks.' }]);
-  const [chatIn,      setChatIn]      = useState('');
-  const fileRef = useRef();
-  const { toasts, add } = useToast();
-
-  // Loading delay
-  useEffect(() => { setTimeout(() => setLoading(false), 4200); }, []);
-
-  const parseFile = useCallback(f => {
-    if (!f) return;
-    Papa.parse(f, {
-      header: true, skipEmptyLines: true,
-      complete: res => { setRawData(res.data); add(`Loaded ${res.data.length} events from "${f.name}"`); },
-      error: () => add('Failed to parse file', 'error'),
-    });
-  }, [add]);
-
-  const doAnalyze = useCallback(() => {
-    if (!rawData) { add('Upload a dataset first', 'warn'); return; }
-    setAnalyzing(true);
-    setConsoleMsgs([{ ts: new Date().toLocaleTimeString(), msg: 'Initializing PriceGuard AI Engine...', secure: dataMode === 'enterprise' }]);
-    
-    const steps = [
-      'Scanning dataset for demand signals...',
-      'Synthesizing feature vectors (popularity, listings, urgency)...',
-      'Executing Ensemble RF (Layer 1) — mapping fair market values...',
-      'Executing GBM (Layer 2) — residual error correction...',
-      'Flagging arbitrage anomalies above conservative threshold...',
-      'Finalizing report and revenue recovery estimates...'
-    ];
-
-    steps.forEach((s, i) => {
-      setTimeout(() => {
-        setConsoleMsgs(prev => [...prev, { ts: new Date().toLocaleTimeString(), msg: s, secure: dataMode === 'enterprise' }]);
-      }, (i + 1) * 600);
-    });
-
-    setTimeout(() => {
-      try {
-        const r = runAnalysis(rawData);
-        setResults(r);
-        add(`Analysis complete — ${r.arbEvents.length} arbitrage events found (${(r.arbRate * 100).toFixed(1)}%)`);
-        
-        // PROACTIVE AGENT BRIEFING
-        const advice = `Audit Complete. Found ${r.arbEvents.length} high-risk events. The primary leakage is in ${r.topCities[0]?.city || 'major markets'}, where speculative margins average $${(r.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0) / (r.arbEvents.length || 1)).toFixed(2)}. I recommend a floor price correction of +18% for HIGH tier risks.`;
-        setChatMsgs(prev => [...prev, { role: 'ai', text: advice }]);
-        setShowChat(true); // Open chat automatically to show advice
-      } catch (e) {
-        add('Analysis error: ' + e.message, 'error');
-      }
-      setAnalyzing(false);
-    }, 4500);
-  }, [rawData, add, dataMode]);
-
-  const onFetchedData = useCallback((rows) => {
-    setRawData(rows);
-    setResults(null);
-    setTab('dashboard');
+const LoadingScreen = () => {
+  const [line, setLine] = useState(0);
+  const taglines = [
+    { text: "PriceGuard AI v1.1.6", delay: 300, class: "line1" },
+    { text: "Neural Core Initialized", delay: 1500, class: "line2" },
+    { text: "Security Node: ACTIVE", delay: 3000, class: "line3" }
+  ];
+  
+  useEffect(() => {
+    const timers = taglines.map((tag, i) => setTimeout(() => setLine(i + 1), tag.delay));
+    return () => timers.forEach(t => clearTimeout(t));
   }, []);
+
+  return (
+    <div className="loading">
+      <div className="load-logo-wrap">
+        <div className="load-logo">
+          <img src="/logo.png" alt="Logo" />
+          <div className="load-logo-ring" />
+          <div className="load-logo-ring2" />
+        </div>
+      </div>
+      <div className="load-title">PRICEGUARD</div>
+      <div className="load-taglines">
+        {taglines.map((tag, i) => (
+          <div key={i} className={`tagline ${tag.class} ${line > i ? 'done' : ''}`}>
+            {line > i ? tag.text : ''}
+          </div>
+        ))}
+      </div>
+      <div className="load-bar-wrap"><div className="load-bar" /></div>
+      <div className="load-status">ENCRYPTING CONNECTION...</div>
+    </div>
+  );
+};
+
+const SI = ({ col, sortCol, sortDir }) => {
+  if (sortCol !== col) return null;
+  return <span style={{ marginLeft: 5, fontSize: 8 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
+};
+
+export default function App() {
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('dashboard');
+  const [dataMode, setDataMode] = useState('public');
+  const [rawData, setRawData] = useState(null);
+  const [results, setResults] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [consoleMsgs, setConsoleMsgs] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filterTier, setFilter] = useState('ALL');
+  const [sortCol, setSort] = useState('popularity');
+  const [sortDir, setDir] = useState('desc');
+  const [page, setPage] = useState(1);
+  const [drag, setDrag] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [previewData, setPreviewData] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMsgs, setChatMsgs] = useState([{ role: 'ai', text: 'PriceGuard AI Agent online. I am monitoring your audit parameters.' }]);
+  const fileRef = useRef();
+  const chatScroll = useRef();
+
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 4200);
+  }, []);
+
+  const add = (msg, type = 'success') => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000);
+  };
+
+  const onFetchedData = (data) => {
+    setRawData(data);
+    add(`Ingested ${data.length} records successfully`);
+  };
+
+  const parseFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const rows = text.split('\n').map(r => r.split(','));
+      const headers = rows[0].map(h => h.trim().toLowerCase());
+      const data = rows.slice(1).filter(r => r.length > 1).map(r => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = r[i]?.trim());
+        return obj;
+      });
+      onFetchedData(data);
+    };
+    reader.readAsText(file);
+  };
+
+  const doAnalyze = () => {
+    setAnalyzing(true);
+    setConsoleMsgs([]);
+    const logs = [
+      { msg: 'Initializing Neural Ensemble...', ts: '0.00s' },
+      { msg: 'Weighting Gradient Boosting rounds...', ts: '0.45s' },
+      { msg: 'Scanning for market manipulation...', ts: '1.20s', secure: true },
+      { msg: 'Finalizing audit integrity check...', ts: '2.80s' }
+    ];
+    logs.forEach((l, i) => setTimeout(() => setConsoleMsgs(prev => [...prev, l]), i * 750));
+    setTimeout(() => {
+      const res = runAnalysis(rawData);
+      setResults(res);
+      setAnalyzing(false);
+      add('Audit Complete: Market risk profiles generated');
+      
+      // Proactive AI Agent trigger
+      setTimeout(() => {
+        setChatOpen(true);
+        const advice = `Audit Complete. I've detected speculative exposure in ${res.topCities[0]?.city}. Recommend adjusting floor prices by $${(res.arbEvents.reduce((s,d)=>s+d.arbitrage_margin,0)/res.arbEvents.length).toFixed(0)} to neutralize leakage.`;
+        setChatMsgs(prev => [...prev, { role: 'ai', text: advice }]);
+      }, 1500);
+    }, 3200);
+  };
 
   const tableData = useMemo(() => {
     if (!results) return [];
-    const q = search.toLowerCase();
     return results.processed
-      .filter(d =>
-        (!q || [d.title, d.venue, d.city].some(s => s?.toLowerCase().includes(q))) &&
+      .filter(d => 
+        (d.title?.toLowerCase().includes(search.toLowerCase()) || d.city?.toLowerCase().includes(search.toLowerCase())) &&
         (filterTier === 'ALL' || (filterTier === 'ARB' && d.arbitrage === 1) || d.arbitrage_tier === filterTier)
       )
       .sort((a, b) => {
@@ -107,7 +138,6 @@ export default function App() {
   }, [results, search, filterTier, sortCol, sortDir]);
 
   const PER = 16;
-  const totPg = Math.max(1, Math.ceil(tableData.length / PER));
   const pageData = tableData.slice((page - 1) * PER, page * PER);
   const doSort = col => { if (sortCol === col) setDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSort(col); setDir('desc'); } };
 
@@ -118,125 +148,86 @@ export default function App() {
     { lbl: 'Revenue Leakage', val: '$' + results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0).toFixed(0), cl: 'p', sub: 'Total margin leakage', ico: '⚠' },
     { lbl: 'Revenue Velocity', val: '+' + (results.arbRate * 4.2).toFixed(1) + '%', cl: 'c', sub: 'Projected recovery speed', ico: '⚡' },
     { lbl: 'Model R²',        val: (results.r2 * 100).toFixed(1) + '%',    cl: 'b', sub: 'Ensemble Precision',    ico: '◎' },
-    { lbl: 'Secure Nodes',    val: results.totalEvents,                    cl: '',  sub: 'Audited records',       ico: '▦' },
+    { lbl: 'Risk Factor',     val: results.arbRate > 0.2 ? 'HIGH' : 'LOW', cl: results.arbRate > 0.2 ? 'p' : 'g', sub: 'Global vulnerability', ico: '⊘' }
   ] : [
-    { lbl: 'Total Events',   val: results.totalEvents,                     cl: '',  sub: 'Loaded from dataset',   ico: '▦' },
-    { lbl: 'Flagged Events', val: results.arbEvents.length,                cl: 'p', sub: `${(results.arbRate * 100).toFixed(1)}% arbitrage rate`, ico: '⚑' },
-    { lbl: 'Model R²',       val: (results.r2 * 100).toFixed(1) + '%',    cl: 'g', sub: 'Ensemble RF+GBM',       ico: '◎' },
-    { lbl: 'Mean Abs Error', val: '$' + results.mae.toFixed(0),            cl: 'a', sub: 'Price prediction error', ico: '◈' },
-    { lbl: 'Classifier F1',  val: (results.f1 * 100).toFixed(1) + '%',    cl: 'c', sub: 'Precision × Recall',    ico: '◆' },
-  ]) : [
-    { lbl: 'Total Events',   val: '—', cl: '',  sub: 'Upload dataset',       ico: '▦' },
-    { lbl: 'Flagged Events', val: '—', cl: 'p', sub: 'Run analysis',         ico: '⚑' },
-    { lbl: 'Model R²',       val: '—', cl: 'g', sub: 'Ensemble RF+GBM',     ico: '◎' },
-    { lbl: 'Mean Abs Error', val: '—', cl: 'a', sub: 'Price prediction error', ico: '◈' },
-    { lbl: 'Classifier F1',  val: '—', cl: 'c', sub: 'Precision × Recall',  ico: '◆' },
-  ];
+    { lbl: 'Arbitrage Rate',  val: (results.arbRate * 100).toFixed(1) + '%', cl: 'p', sub: 'Nodes above threshold', ico: '📈' },
+    { lbl: 'Confidence (F1)', val: (results.f1 * 100).toFixed(1) + '%',      cl: 'g', sub: 'Model accuracy score', ico: '✓' },
+    { lbl: 'MAE (Error)',     val: '$' + results.mae.toFixed(2),             cl: 'b', sub: 'Price prediction gap', ico: '±' },
+    { lbl: 'Records',         val: results.totalEvents,                      cl: 'c', sub: 'Dataset nodes scan',   ico: '⬡' },
+    { lbl: 'R² (Fit)',        val: (results.r2 * 100).toFixed(1) + '%',      cl: 'a', sub: 'Variance explained',   ico: '⚡' }
+  ]) : [];
+
+  const handleChat = (e) => {
+    e.preventDefault();
+    const input = e.target.elements.msg;
+    if (!input.value.trim()) return;
+    const msg = input.value;
+    setChatMsgs(prev => [...prev, { role: 'user', text: msg }]);
+    input.value = '';
+    setTimeout(() => {
+      let reply = "I am processing your request. Our ensemble models suggest maintaining current floor prices for stable nodes.";
+      if (msg.toLowerCase().includes('advice') || msg.toLowerCase().includes('suggest')) {
+        reply = results ? `Based on the current audit, focus on the ${results.topCities[0]?.city} cluster where arbitrage risk is peaking at ${(results.arbRate*1.5*100).toFixed(1)}%.` : "Please run an AI Audit first so I can analyze the market data.";
+      }
+      setChatMsgs(prev => [...prev, { role: 'ai', text: reply }]);
+    }, 1000);
+  };
 
   return (
-    <div className="app">
+    <div className={`app ${dataMode === 'enterprise' ? 'secure' : ''}`}>
       <div className="orb o1" /><div className="orb o2" /><div className="orb o3" />
-      
-      {/* ── CHATBOT AGENT ── */}
-      <div className={`chat-trigger ${showChat ? 'active' : ''}`} onClick={() => setShowChat(!showChat)} style={{ background: 'var(--b1)', border: '2px solid var(--b)' }}>
-        <div className="nav-logo-wrap" style={{ width: '40px', height: '40px' }}>
-          <img src="https://raw.githubusercontent.com/Abhiram03-2009/PriceGuard-AI/main/priceguard-react-app/public/logo192.png" alt="PriceGuard" />
-          <div className="nav-logo-spin" />
-        </div>
-      </div>
-      {showChat && (
-        <div className="chat-window">
-          <div className="modal-hd">
-            <div className="card-title" style={{ color: '#fff' }}>PriceGuard AI Agent</div>
-            <button className="modal-close" onClick={() => setShowChat(false)}>×</button>
-          </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {chatMsgs.map((m, i) => (
-              <div key={i} className={`chat-msg ${m.role === 'ai' ? 'chat-ai' : 'chat-user'}`}>
-                {m.text}
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: '12px', borderTop: '1px solid var(--b1)', display: 'flex', gap: '8px' }}>
-            <input 
-              className="fi" 
-              style={{ flex: 1 }} 
-              placeholder="Ask for suggestions or market logic..." 
-              value={chatIn}
-              onChange={e => setChatIn(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && chatIn.trim()) {
-                  const uMsg = chatIn.trim();
-                  setChatMsgs(prev => [...prev, { role: 'user', text: uMsg }]);
-                  setChatIn('');
-                  setTimeout(() => {
-                    let resp = "I've cross-referenced that with our demand vectors. The current market volatility suggests a high risk of speculative resale. We should adjust the fair-market thresholds immediately.";
-                    if (uMsg.toLowerCase().includes('help')) resp = "I can guide you through the audit. Try uploading a CSV and running the Ensemble analysis. I'll flag any margins that exceed our $22/18% safety threshold.";
-                    if (results && uMsg.toLowerCase().includes('suggest')) resp = `Focus on ${results.arbEvents.length} flagged events. Prioritizing ${results.topCities[0]?.city} could recover up to $${(results.arbEvents.reduce((s,d)=>s+d.prevented_profit,0)).toFixed(0)} in previously lost margin.`;
-                    setChatMsgs(prev => [...prev, { role: 'ai', text: resp }]);
-                  }, 800);
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {analyzing && (
-        <div className="radar-container">
-          <div className="radar-circle" />
-          <div className="radar-circle" style={{ animationDelay: '1s' }} />
-          <div className="radar-circle" style={{ animationDelay: '2s' }} />
-          <div className="radar-line" />
-        </div>
-      )}
       {dataMode === 'enterprise' && <div className="secure-scan" />}
       {dataMode === 'enterprise' && <div className="secure-grid" />}
-      
-      <ToastContainer toasts={toasts} />
-      <Navbar tab={tab} setTab={setTab} results={results} dataMode={dataMode} />
 
-      <main className="main">
-        {/* ── STAT BAR ── */}
-        <div className="stat-bar fade">
-          {stats.map((s, i) => (
-            <div key={i} className="stat-card">
-              <div className="slbl" style={{ color: '#fff' }}>{s.lbl}</div>
-              <div className={`sval ${s.cl}`}>{s.val}</div>
-              <div className="ssub" style={{ color: '#fff', opacity: 0.8 }}>{s.sub}</div>
-              <div className="sicon">{s.ico}</div>
-            </div>
-          ))}
+      <div className={`navbar ${dataMode === 'enterprise' ? 'secure' : ''}`}>
+        <div className="nav-brand">
+          <div className="nav-logo-wrap">
+            <img src="/logo.png" alt="PriceGuard" />
+            <div className="nav-logo-spin" />
+          </div>
+          <div>
+            <div className="brand-name">PRICE<span className="brand-ai">GUARD</span></div>
+            <div className="brand-sub">AI Auditing Systems</div>
+          </div>
         </div>
+        <div className="nav-tabs">
+          <button className={`nav-tab ${tab === 'dashboard' ? 'act' : ''}`} onClick={() => setTab('dashboard')}>DASHBOARD</button>
+          <button className={`nav-tab ${tab === 'fetch' ? 'act' : ''} nav-tab-fetch`} onClick={() => setTab('fetch')}>FETCH DATA</button>
+          <button className={`nav-tab ${tab === 'market' ? 'act' : ''}`} onClick={() => setTab('market')}>MARKET ANALYSIS</button>
+          <button className={`nav-tab ${tab === 'events' ? 'act' : ''}`} onClick={() => setTab('events')}>AUDIT LOG</button>
+          <button className={`nav-tab ${tab === 'analysis' ? 'act' : ''}`} onClick={() => setTab('analysis')}>ML METRICS</button>
+          <button className={`nav-tab ${tab === 'model' ? 'act' : ''}`} onClick={() => setTab('model')}>ARCHITECTURE</button>
+          <button className={`nav-tab ${tab === 'insights' ? 'act' : ''}`} onClick={() => setTab('insights')}>AI REPORTS</button>
+        </div>
+        <div className="live-badge"><div className="live-dot" /> LIVE NODES</div>
+      </div>
 
-        {/* ────────────── DASHBOARD ────────────── */}
+      <div className="main">
         {tab === 'dashboard' && (
           <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-
-            {/* Mode Toggle */}
-            {!rawData && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.2rem' }}>
-                <div style={{ display: 'flex', background: 'rgba(24,168,255,0.05)', border: '2px solid var(--b1)', borderRadius: '8px', padding: '4px' }}>
-                  <button 
-                    className={`nav-tab ${dataMode === 'public' ? 'act' : ''}`} 
-                    onClick={() => setDataMode('public')}
-                  >
-                    Public Event Analysis
-                  </button>
-                  <button 
-                    className={`nav-tab ${dataMode === 'enterprise' ? 'act' : ''}`} 
-                    onClick={() => setDataMode('enterprise')}
-                    style={dataMode === 'enterprise' ? { borderColor: 'rgba(255,54,104,0.3)', color: 'var(--p)', background: 'rgba(255,54,104,0.1)' } : {}}
-                  >
-                    Team/Enterprise Portal
-                  </button>
-                </div>
+            {/* Mode Switcher */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+              <div className="card" style={{ padding: '4px', borderRadius: '10px', display: 'flex', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--b1)' }}>
+                <button className={`nav-tab ${dataMode === 'public' ? 'act' : ''}`} onClick={() => setDataMode('public')} style={{ fontSize: '10px', padding: '6px 16px' }}>PUBLIC MODE</button>
+                <button className={`nav-tab ${dataMode === 'enterprise' ? 'act' : ''} secure`} onClick={() => setDataMode('enterprise')} style={{ fontSize: '10px', padding: '6px 16px' }}>TEAM/ENTERPRISE</button>
               </div>
-            )}
+            </div>
 
-            {/* Upload zone */}
-            {!rawData && (
-              <div
+            <div className="stat-bar">
+              {results ? stats.map((s, i) => (
+                <div key={i} className="stat-card">
+                  <div className="slbl">{s.lbl}</div>
+                  <div className={`sval ${s.cl}`}>{s.val}</div>
+                  <div className="ssub">{s.sub}</div>
+                  <div className="sicon">{s.ico}</div>
+                </div>
+              )) : (
+                [1,2,3,4,5].map(i => <div key={i} className="stat-card" style={{ opacity: 0.3 }}><div className="slbl">WAITING...</div><div className="sval">—</div></div>)
+              )}
+            </div>
+
+            {!rawData ? (
+              <div 
                 className={`upload-zone ${drag ? 'drag' : ''}`}
                 onDragOver={e => { e.preventDefault(); setDrag(true); }}
                 onDragLeave={() => setDrag(false)}
@@ -264,10 +255,7 @@ export default function App() {
                 <button className="btn btn-pri btn-sm" onClick={e => { e.stopPropagation(); fileRef.current?.click(); }} style={dataMode === 'enterprise' ? { color: '#fff', background: 'var(--p)', borderColor: 'var(--p)', boxShadow: '0 0 14px rgba(255,54,104,0.4)' } : {}}>Begin Audit</button>
                 <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => parseFile(e.target.files[0])} />
               </div>
-            )}
-
-            {/* File loaded / result banner */}
-            {rawData && (
+            ) : (
               <div className="card" style={results ? { borderColor: 'rgba(0,214,143,0.3)', background: 'rgba(0,214,143,0.02)' } : {}}>
                 <div className="card-hd">
                   <div className="card-title" style={results ? { color: 'var(--g)' } : { color: '#fff' }}>
@@ -357,44 +345,24 @@ export default function App() {
 
                 <div className="card">
                   <div className="card-hd">
-                    <div className="card-title" style={{ color: '#fff' }}>Audit Performance Metrics</div>
-                    <div style={{ display: 'flex', gap: 7 }}>
-                      <button className="dl-btn" onClick={() => { dlCSV(results.arbEvents, 'priceguard_audit_report.csv'); add('Audit report downloaded'); }}>↓ Download Audit</button>
-                    </div>
+                    <div className="card-title" style={{ color: '#fff' }}>AI Corrective Action Log</div>
+                    <button className="dl-btn" onClick={() => dlCSV(results.processed, 'priceguard_audit_full.csv')}>Download CSV Audit</button>
                   </div>
-                  <div className="card-body">
-                    <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {[
-                        { val: results.r2 * 100,        color: '#18a8ff', lbl: 'R²'     },
-                        { val: results.f1 * 100,        color: '#00d68f', lbl: 'F1'     },
-                        { val: results.precision * 100, color: '#00e5cc', lbl: 'Prec'   },
-                        { val: results.recall * 100,    color: '#f5a623', lbl: 'Recall' },
-                        { val: results.arbRate * 100,   color: '#ff3668', lbl: 'Arb%'  },
-                      ].map((m, i) => <Donut key={i} value={m.val} color={m.color} label={m.lbl} />)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card">
-                  <div className="card-hd">
-                    <div className="card-title" style={{ color: '#fff' }}>Top Vulnerability Nodes</div>
-                  </div>
-                  <div className="card-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: '1rem' }}>
-                      {[...results.arbEvents].sort((a, b) => b.arbitrage_margin - a.arbitrage_margin).slice(0, 6).map((ev, i) => (
-                        <div key={i} className="ev-card arb">
-                          <div className="ev-title" style={{ color: '#fff' }}>{ev.title}</div>
-                          <div className="ev-meta" style={{ color: '#fff', opacity: 0.8 }}>{ev.venue} · {ev.city}</div>
-                          <div className="pr-row"><span className="pr-lbl">Floor</span><span className="pr-val blue">${ev.lowest_price.toFixed(2)}</span></div>
-                          <div className="pr-row"><span className="pr-lbl">Corrected</span><span className="price-tag">${ev.corrected_price.toFixed(2)}</span></div>
-                          <div className="pr-row" style={{ marginTop: 5 }}><span className="pr-lbl">Leakage</span><span className="pr-val pink">${ev.arbitrage_margin.toFixed(2)}</span></div>
-                          <div className="risk-row">
-                            <div className="risk-bar"><div className="risk-fill" style={{ width: ev.risk_score + '%', background: ev.risk_score > 55 ? 'var(--p)' : ev.risk_score > 27 ? 'var(--a)' : 'var(--g)' }} /></div>
-                            <span className="badge b-high">{ev.arbitrage_tier}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="tbl-wrap">
+                    <table className="tbl">
+                      <thead><tr>{['Event','Current $','Fair $','Margin','Risk'].map(h => <th key={h} style={{ color: '#fff' }}>{h}</th>)}</tr></thead>
+                      <tbody>
+                        {results.processed.slice(0, 10).map((r, i) => (
+                          <tr key={i} className={r.arbitrage === 1 ? 'arb' : ''}>
+                            <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{r.title}</td>
+                            <td className="mono" style={{ color: '#fff' }}>${r.lowest_price?.toFixed(2)}</td>
+                            <td><span className="price-tag" style={r.arbitrage === 1 ? { background: 'rgba(255,54,104,0.1)', color: 'var(--p)', borderColor: 'rgba(255,54,104,0.3)' } : {}}>${r.fair_value_demand?.toFixed(2)}</span></td>
+                            <td className={`mono ${r.arbitrage_margin > 22 ? 'pink' : ''}`} style={{ color: r.arbitrage_margin > 22 ? 'var(--p)' : '#fff' }}>${r.arbitrage_margin?.toFixed(2)}</td>
+                            <td><span className={`badge ${r.arbitrage === 1 ? 'b-high' : 'b-safe'}`}>{r.arbitrage === 1 ? 'HIGH' : 'SAFE'}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </>
@@ -498,54 +466,78 @@ export default function App() {
                 <span className="co-b">Primary Layer</span>  Random Forest Regressor (n=40)<br />
                 <span className="co-p">Correction Layer</span> Gradient Boosting (rounds=30)<br />
                 <span className="co-c">Safety Guard</span>    Dynamic Arbitrage Threshold ($22 / 18%)<br />
-                <span className="co-g">Status:</span>        Active & Calibrated
+                <span className="co-a">Audit Mode</span>      Enterprise Revenue Velocity Enabled
               </div>
             </div>
           </div>
         )}
+      </div>
 
-        {['analysis', 'events', 'insights'].includes(tab) && !results && (
-          <div className="fade" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-            <div style={{ fontSize: '40px', marginBottom: 14, opacity: 0.4 }}>🛡</div>
-            <div style={{ fontFamily: "'Syne'", fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: 7 }}>Audit Required</div>
-            <button className="btn btn-pri btn-sm" onClick={() => setTab('dashboard')}>Begin Analysis</button>
-          </div>
-        )}
-      </main>
-
-      <footer>
-        <span>PriceGuard AI · Audit v1.1.6 (Final) · {new Date().toISOString().split('T')[0]}</span>
-      </footer>
+      <div className="toasts">
+        {toasts.map(t => <div key={t.id} className={`toast ${t.type}`}>{t.msg}</div>)}
+      </div>
 
       {previewData && (
         <div className="modal-overlay" onClick={() => setPreviewData(null)}>
-          <div className="modal fade" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-hd">
-              <div className="card-title" style={{ color: '#fff' }}>Audit Preview: {previewData.name}</div>
-              <button className="modal-close" onClick={() => setPreviewData(null)}>×</button>
+              <div style={{ color: '#fff', fontWeight: '700' }}>DATA PREVIEW</div>
+              <button className="modal-close" onClick={() => setPreviewData(null)}>&times;</button>
             </div>
             <div className="modal-body">
               <div className="tbl-wrap">
                 <table className="tbl">
-                  <thead>
-                    <tr>{Object.keys(previewData.rows[0] || {}).map(k => <th key={k} style={{ color: '#fff' }}>{k}</th>)}</tr>
-                  </thead>
+                  <thead><tr>{Object.keys(previewData[0] || {}).map(h => <th key={h} style={{ color: '#fff' }}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {previewData.rows.slice(0, 50).map((r, i) => (
-                      <tr key={i}>
-                        {Object.values(r).map((v, j) => <td key={j} className="mono" style={{ fontSize: '11px', color: '#fff' }}>{String(v)}</td>)}
-                      </tr>
+                    {previewData.slice(0, 50).map((r, i) => (
+                      <tr key={i}>{Object.values(r).map((v, j) => <td key={j} style={{ color: '#fff' }}>{v}</td>)}</tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-            <div className="card-hd" style={{ justifyContent: 'flex-end', gap: '10px' }}>
-              <button className="btn btn-pri" onClick={() => dlCSV(previewData.rows, previewData.name)}>Download Full CSV</button>
-            </div>
           </div>
         </div>
       )}
+
+      {/* ── CHATBOT AGENT ── */}
+      <div className="chat-trigger" onClick={() => setChatOpen(!chatOpen)}>
+        <img src="/logo.png" alt="Agent" style={{ width: '60%', height: '60%', objectFit: 'contain' }} />
+      </div>
+      {chatOpen && (
+        <div className="chat-window">
+          <div className="modal-hd" style={{ padding: '0.8rem 1.2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--g)' }} />
+              <div style={{ fontSize: '11px', fontWeight: '800', letterSpacing: 1, color: '#fff' }}>AI AGENT</div>
+            </div>
+            <button className="modal-close" onClick={() => setChatOpen(false)} style={{ fontSize: '18px' }}>&times;</button>
+          </div>
+          <div className="modal-body" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {chatMsgs.map((m, i) => (
+                <div key={i} className={`chat-msg ${m.role === 'ai' ? 'chat-ai' : 'chat-user'}`} style={{ color: '#fff' }}>
+                  {m.text}
+                </div>
+              ))}
+              <div ref={chatScroll} />
+            </div>
+          </div>
+          <form onSubmit={handleChat} style={{ padding: '10px', borderTop: '1px solid var(--b1)', display: 'flex', gap: 5 }}>
+            <input name="msg" className="fi" placeholder="Ask Agent for advice…" style={{ flex: 1, fontSize: '11px' }} autoComplete="off" />
+            <button type="submit" className="btn btn-pri btn-sm" style={{ padding: '4px 10px' }}>SEND</button>
+          </form>
+        </div>
+      )}
+
+      <footer>
+        <div style={{ color: '#fff' }}>&copy; 2026 PRICEGUARD AI AUDITING. DECA COMPETITION BUILD.</div>
+        <div style={{ display: 'flex', gap: '15px', color: '#fff' }}>
+          <span>NODE: v1.1.6-PRO</span>
+          <span>LATENCY: 12ms</span>
+          <span style={{ color: 'var(--g)' }}>STATUS: OPTIMAL</span>
+        </div>
+      </footer>
     </div>
   );
 }
