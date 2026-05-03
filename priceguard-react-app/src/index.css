@@ -358,18 +358,6 @@ select.fi option {
 .toast.error { border-left-color: var(--p); }
 .toast.warn  { border-left-color: var(--a); }
 
-/* ── INSIGHT ── */
-.insight {
-  background: rgba(24, 168, 255, 0.025); border: 1px solid var(--b1); border-left: 2.5px solid var(--b);
-  border-radius: 0 8px 8px 0; padding: 10px 13px; margin-bottom: 8px; font-size: 12.5px; color: var(--t2); line-height: 1.65;
-}
-.insight.warn   { border-left-color: var(--a); background: rgba(245, 166, 35, 0.025); }
-.insight.danger { border-left-color: var(--p); background: rgba(255, 54, 104, 0.025); }
-.insight-lbl { font-family: var(--fm); font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--b); margin-bottom: 4px; }
-.insight-lbl.warn   { color: var(--a); }
-.insight-lbl.danger { color: var(--p); }
-.insight-lbl.gn     { color: var(--g); }
-
 /* ── EVENT CARD ── */
 .ev-card { background: rgba(5, 12, 22, 0.9); border: 1px solid var(--b1); border-radius: 10px; padding: .9rem; transition: all .22s; }
 .ev-card:hover { border-color: var(--b2); box-shadow: 0 0 16px rgba(24, 168, 255, 0.09); }
@@ -542,3 +530,18 @@ select.fi option {
 .chat-user { background: var(--b); color: #fff; align-self: flex-end; }
 
 footer { border-top: 1px solid var(--b1); padding: .8rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 9, 18, 0.5); font-family: var(--fm); font-size: 9.5px; color: #fff; }
+
+/* ── INSIGHTS ── */
+.insight {
+  padding: 1rem; background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--b);
+  border-radius: 4px 8px 8px 4px; margin-bottom: 1rem; font-size: 13px; line-height: 1.6; color: #fff;
+}
+.insight.danger { border-left-color: var(--p); background: rgba(255, 54, 104, 0.05); }
+.insight.warn { border-left-color: var(--a); background: rgba(245, 166, 35, 0.05); }
+.insight.gn { border-left-color: var(--g); background: rgba(0, 214, 143, 0.05); }
+.insight.GN { border-left-color: var(--g); background: rgba(0, 214, 143, 0.05); }
+.insight-lbl { font-family: var(--fm); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.insight-lbl.danger { color: var(--p); }
+.insight-lbl.warn { color: var(--a); }
+.insight-lbl.gn { color: var(--g); }
+.insight-lbl.GN { color: var(--g); }
