@@ -323,9 +323,9 @@ export default function App() {
                           <div className="insight-lbl danger">Revenue Recovery Potental</div>
                           Corrective pricing could reclaim <strong>$${results.arbEvents.reduce((s,d)=>s+d.arbitrage_margin,0).toFixed(0)}</strong> in lost margin currently leaking to secondary speculators.
                         </div>
-                        <div className="insightgn">
+                        <div className="insight gn">
                           <div className="insight-lbl gn">Market Stability Score</div>
-                          Integrity analysis shows <strong>{(100 - results.arbRate*100).toFixed(1)}%</strong> of inventory is currently insulated from manipulation vectors.
+                          Integrity analysis shows <strong>{(100 - results.arbRate * 100).toFixed(1)}%</strong> of inventory is currently insulated from manipulation vectors.
                         </div>
                         <div className="insight warn">
                           <div className="insight-lbl warn">Primary Vulnerability</div>
