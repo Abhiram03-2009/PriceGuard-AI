@@ -153,10 +153,10 @@ body::before {
 /* ── NAVBAR ── */
 .navbar {
   position: sticky; top: 0; z-index: 100;
-  padding-top: calc(env(safe-area-inset-top) + 45px);
-  min-height: calc(110px + env(safe-area-inset-top));
-  background: rgba(3, 9, 18, 0.95); backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--b1); padding-left: 1.5rem; padding-right: 1.5rem;
+  padding-top: calc(env(safe-area-inset-top) + 65px);
+  min-height: calc(130px + env(safe-area-inset-top));
+  background: rgba(3, 9, 18, 0.98); backdrop-filter: blur(32px);
+  border-bottom: 2px solid var(--b1); padding-left: 1.5rem; padding-right: 1.5rem;
   display: flex; align-items: center; justify-content: space-between;
   transition: all 0.4s ease;
 }
@@ -167,45 +167,36 @@ body::before {
 }
 .nav-brand { display: flex; align-items: center; gap: 10px; }
 .nav-logo-wrap {
-  width: 34px; height: 34px; border-radius: 50%;
-  border: 1.5px solid rgba(24, 168, 255, 0.5);
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid rgba(24, 168, 255, 0.8);
   position: relative; overflow: hidden;
   animation: logoglow 3s ease-in-out infinite; flex-shrink: 0;
 }
 .nav-logo-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .nav-logo-spin {
   position: absolute; inset: -1px; border-radius: 50%;
-  background: conic-gradient(transparent 0deg, rgba(24, 168, 255, 0.35) 50deg, transparent 100deg);
+  background: conic-gradient(transparent 0deg, rgba(24, 168, 255, 0.6) 50deg, transparent 100deg);
   animation: spin 4s linear infinite;
 }
 .brand-name {
-  display: flex; align-items: baseline; gap: 6px;
+  display: flex; align-items: baseline; gap: 4px;
   font-family: var(--fnav);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(230, 248, 255, 0.95);
-  line-height: 1.1;
-  -webkit-text-stroke: 0.45px rgba(120, 210, 255, 0.75);
-  text-shadow:
-    0 0 8px rgba(0, 230, 255, 0.45),
-    0 0 18px rgba(24, 168, 255, 0.32),
-    0 0 32px rgba(24, 168, 255, 0.16);
+  color: #fff;
+  line-height: 1;
 }
 .brand-ai {
   font-family: var(--fnav);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   color: #9cecff;
-  -webkit-text-stroke: 0.5px rgba(0, 242, 255, 0.85);
-  text-shadow:
-    0 0 10px rgba(0, 242, 255, 0.6),
-    0 0 22px rgba(24, 168, 255, 0.38),
-    0 0 38px rgba(24, 168, 255, 0.2);
+  text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
 }
-.brand-sub { font-family: var(--fm); font-size: 9px; color: var(--t3); letter-spacing: 2px; text-transform: uppercase; }
+.brand-sub { font-family: var(--fm); font-size: 8px; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
 .nav-tabs { 
   display: flex; gap: 2px; 
   overflow-x: auto;
