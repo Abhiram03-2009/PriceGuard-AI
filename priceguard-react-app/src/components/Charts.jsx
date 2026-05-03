@@ -185,8 +185,45 @@ export function Donut({ value, color = '#18a8ff', label, size = 76 }) {
       <canvas ref={ref} />
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
         <span style={{ fontFamily: "'Syne'", fontSize: size > 70 ? '14px' : '12px', fontWeight: '700', color, lineHeight: 1 }}>{value.toFixed(0)}%</span>
-        {label && <span style={{ fontSize: '8px', color: 'var(--t3)', marginTop: 1 }}>{label}</span>}
+        {label && <span style={{ fontSize: '8px', color: '#fff', marginTop: 1, textTransform: 'uppercase', opacity: 0.8 }}>{label}</span>}
       </div>
     </div>
   );
+}
+
+// ── Pie Chart ──────────────────────────────────────────────────────────────────
+export function Pie({ labels, data, colors, height = 240 }) {
+  const ref = useRef();
+  useChart(ref, ctx => new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors || ['#18a8ff', '#ff3668', '#00d68f', '#f5a623'],
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1.5,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#fff', font: { family: TT.ff, size: 9 }, boxWidth: 10, padding: 15 }
+        },
+        tooltip: {
+          backgroundColor: TT.bg,
+          borderColor: TT.bc,
+          borderWidth: 1,
+          titleColor: TT.tc,
+          bodyColor: '#fff',
+          titleFont: { family: TT.ff, size: 10 },
+          bodyFont: { family: TT.ff, size: 10 }
+        }
+      }
+    }
+  }), [data]);
+  return <div className="chart-wrap" style={{ height }}><canvas ref={ref} /></div>;
 }
