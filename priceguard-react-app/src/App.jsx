@@ -3,6 +3,7 @@ import MarketTab from './components/MarketTab';
 import FetchTab from './components/FetchTab';
 import { ForecastChart, ScatterLinChart, HBar, VBar } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
+import './index.css';
 
 const taglines = [
   { text: "PriceGuard AI v1.1.6", delay: 300, class: "line1" },
