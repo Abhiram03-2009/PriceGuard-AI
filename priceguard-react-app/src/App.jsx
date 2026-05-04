@@ -1,16 +1,17 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import MarketTab from './components/MarketTab';
 import FetchTab from './components/FetchTab';
-import { ForecastChart, ScatterLinChart, HBar, VBar, Donut } from './components/Charts';
+import { ForecastChart, ScatterLinChart, HBar, VBar } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
+
+const taglines = [
+  { text: "PriceGuard AI v1.1.6", delay: 300, class: "line1" },
+  { text: "Neural Core Initialized", delay: 1500, class: "line2" },
+  { text: "Security Node: ACTIVE", delay: 3000, class: "line3" }
+];
 
 const LoadingScreen = () => {
   const [line, setLine] = useState(0);
-  const taglines = [
-    { text: "PriceGuard AI v1.1.6", delay: 300, class: "line1" },
-    { text: "Neural Core Initialized", delay: 1500, class: "line2" },
-    { text: "Security Node: ACTIVE", delay: 3000, class: "line3" }
-  ];
   
   useEffect(() => {
     const timers = taglines.map((tag, i) => setTimeout(() => setLine(i + 1), tag.delay));
