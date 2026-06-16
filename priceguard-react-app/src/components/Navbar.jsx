@@ -1,51 +1,39 @@
 import React from 'react';
 import logo from '../logo.png';
 
-const TABS = [
-  ['dashboard', 'Dashboard'],
-  ['fetch',     '⬇ Fetch Data'],
-  ['analysis',  'Analysis'],
-  ['market',    'Market Analysis'],
-  ['events',    'Events'],
-  ['insights',  'Insights'],
-  ['model',     'Model'],
-];
-
-export default function Navbar({ tab, setTab, results, dataMode }) {
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+export default function Navbar({ onMenuClick, theme, toggleTheme, dataMode }) {
   const isSecure = dataMode === 'enterprise';
 
   return (
-    <nav className={`navbar ${isSecure ? 'secure' : ''}`}>
-      <div className="nav-brand">
-        <div className="nav-logo-wrap" style={isSecure ? { borderColor: 'var(--p)' } : {}}>
-          <img src={logo} alt="PriceGuard" />
-          <div className="nav-logo-spin" style={isSecure ? { background: 'conic-gradient(transparent 0deg, rgba(255, 54, 104, 0.35) 50deg, transparent 100deg)' } : {}} />
-        </div>
-        <div>
-          <div className="brand-name" style={isSecure ? { textShadow: '0 0 18px rgba(255, 54, 104, 0.4)' } : {}}>
-            PriceGuard<span className="brand-ai" style={isSecure ? { color: '#ff8ca8', textShadow: '0 0 22px rgba(255, 54, 104, 0.6)' } : {}}>AI</span>
-          </div>
-          <div className="brand-sub">{isSecure ? 'Enterprise Protection Portal' : 'Ticket Arbitrage Intelligence'}</div>
+    <header className={`ios-header ${isSecure ? 'secure' : ''}`}>
+      {/* Left Action: Hamburger Menu */}
+      <button 
+        className="ios-header-action-btn" 
+        onClick={onMenuClick}
+        aria-label="Open settings"
+        id="btn-hamburger"
+      >
+        ☰
+      </button>
+
+      {/* Center Logo + Brand Title */}
+      <div className="ios-header-brand">
+        <img src={logo} alt="PriceGuard AI Logo" className="ios-header-logo" />
+        <div className="ios-header-title">
+          PriceGuard <span>AI</span>
         </div>
       </div>
 
-      <div className="nav-tabs">
-        {TABS.map(([id, lbl]) => (
-          <button
-            key={id}
-            className={`nav-tab ${tab === id ? 'act' : ''} ${id === 'fetch' ? 'nav-tab-fetch' : ''} ${isSecure ? 'secure' : ''}`}
-            onClick={() => setTab(id)}
-          >
-            {lbl}
-          </button>
-        ))}
-      </div>
-
-      <div className="live-badge" style={isSecure ? { color: 'var(--p)' } : {}}>
-        <div className="live-dot" style={isSecure ? { background: 'var(--p)' } : {}} />
-        {isSecure ? 'SECURE' : (results ? `LIVE · ${today}` : 'READY')}
-      </div>
-    </nav>
+      {/* Right Action: Light/Dark Mode Switch */}
+      <button 
+        className="ios-header-action-btn" 
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        id="btn-theme-toggle"
+        style={{ fontSize: '16px' }}
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
+    </header>
   );
 }
