@@ -25,7 +25,7 @@ const SPORTS_TAXONOMY = [
   { value: 'motorsports',         label: 'Motorsports' },
 ];
 
-export default function FetchTab({ onDataLoaded, add, setPreviewData }) {
+export default function FetchTab({ onDataLoaded, add, setPreviewData, setTab }) {
   const [clientId,    setClientId]    = useState('NTUxNzM5NjJ8MTc2NjkyNjQzNy4yMDE5MTAz');
   const [eventType,   setEventType]   = useState('sports');
   const [sportSub,    setSportSub]    = useState('');
@@ -156,7 +156,8 @@ export default function FetchTab({ onDataLoaded, add, setPreviewData }) {
   const doLoadIntoApp = () => {
     if (!fetchedRows.length) { add('Fetch data first', 'warn'); return; }
     onDataLoaded(fetchedRows);
-    add(`Loaded ${fetchedRows.length} events into dashboard — run AI Analysis to proceed`);
+    if (setTab) setTab('dashboard');
+    add(`Loaded ${fetchedRows.length} events! Redirected to Dashboard to run AI Analysis.`);
   };
 
   const pricedCount = fetchedRows.filter(r => r.lowest_price).length;
