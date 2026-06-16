@@ -95,7 +95,7 @@ export function buildForecast(baseRate, rng) {
 }
 
 // ── Main Analysis ─────────────────────────────────────────────────────────────
-export function runAnalysis(rawData) {
+export function runAnalysis(rawData, config = {}) {
   const now = new Date();
   const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
   const rng = seededRNG(seed);
@@ -122,9 +122,9 @@ export function runAnalysis(rawData) {
   const trainData = df.map(d => ({ x: Object.fromEntries(feats.map(f => [f, d[f]])), y: d.average_price }));
   const trainDemand = df.map(d => ({ x: Object.fromEntries(featsDemand.map(f => [f, d[f]])), y: d.average_price }));
 
-  const N_TREES = 40;
-  const GB_ROUNDS = 30;
-  const GB_LR = 0.1;
+  const N_TREES = config.rfTrees ?? 40;
+  const GB_ROUNDS = config.gbRounds ?? 30;
+  const GB_LR = config.gbLearningRate ?? 0.1;
 
   const rfP = rfPredict(trainData, trainData.map(d => d.x), feats, N_TREES, rng);
   const gbP = gbPredict(trainData, trainData.map(d => d.x), feats, GB_ROUNDS, GB_LR, rng);
@@ -139,7 +139,7 @@ export function runAnalysis(rawData) {
     const fairFromDemand = ensFair[i] * (1 + (d.urgency * 0.05) + (d.popularity * 0.03));
     const margin = fairFromDemand - d.lowest_price;
     // Conservative threshold: at least $22 or 18% of the floor price
-    const dynThr = Math.max(22, d.lowest_price * 0.18);
+    const dynThr = Math.max(config.dynThresholdMin ?? 22, d.lowest_price * (config.dynThresholdPercent ?? 0.18));
     const isArb = margin > dynThr;
     const risk = Math.min(100, Math.max(0, (margin / (d.lowest_price + 1)) * 250));
     const corr = isArb ? Math.min(d.lowest_price + 0.58 * margin, fairFromDemand) : d.lowest_price;
