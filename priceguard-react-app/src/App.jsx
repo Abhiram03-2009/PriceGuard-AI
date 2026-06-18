@@ -6,6 +6,7 @@ import PortfolioTab from './components/PortfolioTab';
 import AuthScreen from './components/AuthScreen';
 import { ForecastChart, ScatterLinChart, HBar, VBar } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
+import { generateAdvisorReply, buildAuditSummary } from './advisor';
 import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/Navbar';
 import BottomTabs from './components/BottomTabs';
@@ -15,89 +16,6 @@ const SI = ({ col, sortCol, sortDir }) => {
   if (sortCol !== col) return null;
   return <span style={{ marginLeft: 5, fontSize: 8 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
 };
-
-const TRAINING_DATA = [
-  {
-    intent: 'GREETING',
-    examples: ['hello', 'hi', 'hey', 'who are you', 'how does this work', 'help me', 'start', 'good morning', 'assistant', 'chatbot']
-  },
-  {
-    intent: 'EXPLAIN_RF',
-    examples: ['random forest', 'forest', 'trees', 'bagging', 'how does random forest work', 'explain random forest', 'what is random forest', 'decision tree', 'split']
-  },
-  {
-    intent: 'EXPLAIN_GBM',
-    examples: ['gradient boosting', 'gbm', 'boosting', 'learning rate', 'rounds', 'how does gbm work', 'explain gradient boosting', 'what is gradient boosting', 'boosting rounds']
-  },
-  {
-    intent: 'GET_METRICS',
-    examples: ['mae', 'r2', 'f1', 'accuracy', 'error', 'validation', 'performance', 'metrics', 'confidence', 'precision', 'recall', 'rmse', 'mean absolute error', 'r-squared']
-  },
-  {
-    intent: 'GET_ARBITRAGE',
-    examples: ['arbitrage', 'flagged', 'exposure', 'leakage', 'margin', 'gap', 'yield', 'speculation', 'opportunities', 'profit', 'saved', 'leak']
-  },
-  {
-    intent: 'HOTSPOTS',
-    examples: ['city', 'cities', 'hotspot', 'hotspots', 'location', 'locations', 'where is the risk', 'regional', 'zones', 'highest speculation', 'top city']
-  },
-  {
-    intent: 'GET_ADVICE',
-    examples: ['advice', 'suggest', 'recommendation', 'recommend', 'how to fix', 'reprice', 'strategy', 'mitigate', 'action', 'stabilize', 'pricing recommendations']
-  }
-];
-
-function classifyIntent(text) {
-  const tokenize = (t) => {
-    return t.toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .split(/\s+/)
-      .filter(w => w.length > 1);
-  };
-  
-  const tokens = tokenize(text);
-  if (tokens.length === 0) return { intent: 'UNKNOWN', confidence: 0 };
-
-  const inputVec = {};
-  tokens.forEach(w => { inputVec[w] = (inputVec[w] || 0) + 1; });
-
-  let bestIntent = 'UNKNOWN';
-  let bestScore = 0;
-
-  TRAINING_DATA.forEach(item => {
-    const targetVec = {};
-    item.examples.forEach(ex => {
-      tokenize(ex).forEach(w => {
-        targetVec[w] = (targetVec[w] || 0) + 1;
-      });
-    });
-
-    let dotProduct = 0;
-    let inputNormSq = 0;
-    let targetNormSq = 0;
-
-    Object.keys(inputVec).forEach(w => { inputNormSq += inputVec[w] ** 2; });
-    Object.keys(targetVec).forEach(w => {
-      targetNormSq += targetVec[w] ** 2;
-      if (inputVec[w]) dotProduct += inputVec[w] * targetVec[w];
-    });
-
-    const similarity = (inputNormSq > 0 && targetNormSq > 0)
-      ? dotProduct / (Math.sqrt(inputNormSq) * Math.sqrt(targetNormSq))
-      : 0;
-
-    if (similarity > bestScore) {
-      bestScore = similarity;
-      bestIntent = item.intent;
-    }
-  });
-
-  const confidence = bestScore > 0 ? Math.min(0.99, 0.2 + bestScore * 0.8) : 0;
-  return {
-    intent: bestScore > 0.15 ? bestIntent : 'UNKNOWN',
-    confidence: bestScore > 0.15 ? confidence : 0
-  };
-}
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -130,8 +48,10 @@ export default function App() {
 
   // Chatbot State
   const [chatMsgs, setChatMsgs] = useState([
-    { role: 'ai', text: 'Welcome to PriceGuard AI Advisor. I am trained locally to analyze ticket arbitrage anomalies and explain ensemble ML regressions. How can I assist you today?', intent: 'SYSTEM', confidence: 1.0 }
+    { role: 'ai', text: 'Welcome to PriceGuard AI Advisor. Ask me anything — model accuracy, arbitrage exposure, pricing strategy, data sources, exports, or how to use the app. I\'ll give you a direct answer based on your data when available.' }
   ]);
+  const [chatTyping, setChatTyping] = useState(false);
+  const lastAiIntent = useRef(null);
   const chatScroll = useRef(null);
 
   // Theme Toggler
@@ -152,7 +72,7 @@ export default function App() {
     if (chatScroll.current) {
       chatScroll.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatMsgs, tab]);
+  }, [chatMsgs, chatTyping, tab]);
 
   const add = (msg, type = 'success') => {
     const id = Date.now();
@@ -211,11 +131,9 @@ export default function App() {
       setAnalyzing(false);
       add('Audit Complete: Yield optimization metrics generated.');
       
-      // Proactive AI response trigger
       setTimeout(() => {
-        const avgCorr = (res.arbEvents.reduce((s,d)=>s+d.arbitrage_margin,0)/res.arbEvents.length).toFixed(0);
-        const advice = `Audit resolved. Found ${res.arbEvents.length} price arbitrage opportunities. Speculation peak detected in ${res.topCities[0]?.city}. Adjusting floor prices by an average of $${avgCorr} will prevent $${res.arbEvents.reduce((s,d)=>s+d.arbitrage_margin,0).toFixed(0)} in margin leakage.`;
-        setChatMsgs(prev => [...prev, { role: 'ai', text: advice }]);
+        const advice = buildAuditSummary(res);
+        if (advice) setChatMsgs(prev => [...prev, { role: 'ai', text: advice }]);
       }, 1000);
     }, 3000);
   };
@@ -272,79 +190,26 @@ export default function App() {
   const pageData = tableData.slice((page - 1) * PER, page * PER);
   const doSort = col => { if (sortCol === col) setDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSort(col); setDir('desc'); } };
 
-  // Smart Chat Responses with local Machine Learning NLP
   const sendQuery = (msgText) => {
-    if (!msgText.trim()) return;
-
+    if (!msgText.trim() || chatTyping) return;
     setChatMsgs(prev => [...prev, { role: 'user', text: msgText }]);
+    setChatTyping(true);
 
+    const delay = 400 + Math.min(msgText.length * 8, 600);
     setTimeout(() => {
-      const classification = classifyIntent(msgText);
-      let reply = "";
-      
-      switch (classification.intent) {
-        case 'GREETING':
-          reply = "Hello! I am the PriceGuard AI assistant, powered by a local ensemble Random Forest and GBM model. Ask me about validation metrics (MAE, R²), arbitrage rate and exposure, peak regional hotspots, ensemble weight configs, or recommended mitigation advice.";
-          break;
-          
-        case 'EXPLAIN_RF':
-          reply = `Our pricing model relies on a Random Forest Regressor (${rfTrees} trees). Random Forest works by building multiple independent decision trees on bootstrapped subsets of the ticket data. It splits nodes using random feature subsets to prevent overfitting. For pricing, it outputs the average prediction across all trees, yielding a highly stable baseline demand value that represents the fair asset value.`;
-          break;
-          
-        case 'EXPLAIN_GBM':
-          reply = `We ensemble Gradient Boosting (${gbRounds} rounds, learning rate ${gbLearningRate}) with Random Forest. Gradient Boosting constructs trees sequentially rather than independently. Each new tree is trained to predict the residual errors (gradients) of the preceding trees, multiplying them by the learning rate to make incremental, highly precise corrections. This minimizes pricing error in highly volatile ticket categories.`;
-          break;
-          
-        case 'GET_METRICS':
-          if (!results) {
-            reply = "I cannot retrieve performance metrics because no dataset has been audited yet. Please run an AI Audit on the Dashboard to activate my data memory.";
-          } else {
-            reply = `Our local ML validation metrics report a Mean Absolute Error (MAE) of $${results.mae.toFixed(2)}, indicating our predictions deviate by an average of $${results.mae.toFixed(2)} from market averages. The F1 Classification metric is ${(results.f1 * 100).toFixed(1)}%, with a regression R² score of ${(results.r2 * 100).toFixed(1)}% and RMSE of $${results.rmse.toFixed(2)}.`;
-          }
-          break;
-          
-        case 'GET_ARBITRAGE':
-          if (!results) {
-            reply = "I do not see any loaded results. Please fetch inventory and click 'Run AI Audit' on the Dashboard tab to identify arbitrage exposure.";
-          } else {
-            const totalLeakage = results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0);
-            reply = `Out of ${results.totalEvents} scanned tickets, ${results.arbEvents.length} events (${(results.arbRate * 100).toFixed(1)}%) are flagged as high speculation/arbitrage vectors. This represents a total margin gap of $${totalLeakage.toFixed(2)} in secondary market leakage.`;
-          }
-          break;
-          
-        case 'HOTSPOTS':
-          if (!results) {
-            reply = "No active hotspots identified. Ingest data and perform the analysis to map geographic regional clusters.";
-          } else if (results.topCities.length === 0) {
-            reply = "No cities with speculative anomalies were found in this dataset.";
-          } else {
-            const topCity = results.topCities[0];
-            const cityList = results.topCities.slice(0, 3).map(c => `${c.city} (${c.arb} events)`).join(', ');
-            reply = `The highest speculation risk is concentrated in ${topCity.city}, where we detected ${topCity.arb} flagged listings. The top risk hotspots are: ${cityList}.`;
-          }
-          break;
-          
-        case 'GET_ADVICE':
-          if (!results) {
-            reply = "To receive specific pricing advice, please import a dataset and run the AI Audit.";
-          } else {
-            const totalLeakage = results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0);
-            const avgAdj = (totalLeakage / (results.arbEvents.length || 1)).toFixed(2);
-            reply = `To prevent margin loss, we recommend adjusting your floor pricing in high-risk zones. The flagged tickets require an average upward adjustment of $${avgAdj} to align with demand values. You can execute this directly on the Dashboard using 'Quick Stabilize Actions'.`;
-          }
-          break;
-          
-        default:
-          reply = "I am evaluating your query, but my confidence was low. Could you rephrase your question? You can ask about 'accuracy metrics', 'Random Forest splits', 'GBM learning rate', 'vulnerability hotspots', or 'arbitrage advice'.";
-      }
-
-      setChatMsgs(prev => [...prev, { 
-        role: 'ai', 
-        text: reply,
-        intent: classification.intent,
-        confidence: classification.confidence
-      }]);
-    }, 850);
+      const { text, intent } = generateAdvisorReply(msgText, {
+        results,
+        rfTrees,
+        gbRounds,
+        gbLearningRate,
+        dynThresholdMin,
+        dynThresholdPercent,
+        lastIntent: lastAiIntent.current,
+      });
+      if (intent) lastAiIntent.current = intent;
+      setChatMsgs(prev => [...prev, { role: 'ai', text }]);
+      setChatTyping(false);
+    }, delay);
   };
 
   const handleChatSubmit = (e) => {
@@ -429,110 +294,159 @@ export default function App() {
       <div className={`drawer-overlay ${drawerOpen ? 'open' : ''}`} onClick={() => setDrawerOpen(false)} />
       <div className={`drawer ${drawerOpen ? 'open' : ''}`}>
         <div className="drawer-header">
-          <div>
-            <div className="drawer-title">Command Center</div>
-            {user && (
-              <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginTop: '2px' }}>
-                {user.provider === 'google' ? '🔵' : user.provider === 'apple' ? '⚫' : '✉️'} {user.email}
-              </div>
-            )}
-          </div>
+          <div className="drawer-title">Command Center</div>
           <button className="modal-close" onClick={() => setDrawerOpen(false)} style={{ fontSize: '20px' }}>&times;</button>
         </div>
         <div className="drawer-body">
+
+          {/* ── PROFILE CARD ── */}
+          {user && (
+            <div className="drawer-profile-card">
+              <div className="drawer-avatar">
+                {user.avatarUrl
+                  ? <img src={user.avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  : <span className="drawer-avatar-initials">
+                      {user.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) : '?'}
+                    </span>
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9.5px', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--b)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {user.provider === 'google' ? '● Google Account' : user.provider === 'apple' ? '● Apple ID' : '● Email Account'}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── AI ANALYSIS CONTROLS ── */}
           <div>
-            <div className="drawer-section-title">Model Strategy</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+            <div className="drawer-section-title">AI Analysis Settings</div>
+            <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '10px', lineHeight: '1.5' }}>
+              These sliders tune how the AI finds price opportunities. Higher = more thorough but slower.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>Random Forest Trees</span>
-                  <span className="mono blue">{rfTrees}</span>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <span style={{ fontWeight: 600 }}>Analysis Depth</span>
+                  <span className="mono blue">{rfTrees} trees</span>
                 </label>
-                <input 
-                  type="range" min="10" max="100" step="5" value={rfTrees} 
-                  onChange={e => setRfTrees(Number(e.target.value))} 
-                  style={{ width: '100%', accentColor: 'var(--b)' }}
-                />
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '4px' }}>
+                  More trees = more accurate pricing, takes longer. Recommended: 40–60.
+                </div>
+                <input type="range" min="10" max="100" step="5" value={rfTrees}
+                  onChange={e => setRfTrees(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--b)' }} />
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>GBM Boosting Rounds</span>
-                  <span className="mono pink">{gbRounds}</span>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <span style={{ fontWeight: 600 }}>Refinement Passes</span>
+                  <span className="mono pink">{gbRounds} rounds</span>
                 </label>
-                <input 
-                  type="range" min="10" max="100" step="5" value={gbRounds} 
-                  onChange={e => setGbRounds(Number(e.target.value))} 
-                  style={{ width: '100%', accentColor: 'var(--p)' }}
-                />
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '4px' }}>
+                  How many times the AI self-corrects its price predictions. Recommended: 20–40.
+                </div>
+                <input type="range" min="10" max="100" step="5" value={gbRounds}
+                  onChange={e => setGbRounds(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--p)' }} />
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>Learning Rate</span>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <span style={{ fontWeight: 600 }}>Correction Speed</span>
                   <span className="mono amber">{gbLearningRate.toFixed(2)}</span>
                 </label>
-                <input 
-                  type="range" min="0.01" max="0.5" step="0.01" value={gbLearningRate} 
-                  onChange={e => setGbLearningRate(Number(e.target.value))} 
-                  style={{ width: '100%', accentColor: 'var(--a)' }}
-                />
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '4px' }}>
+                  How aggressively the AI adjusts each pass. Lower = steadier. Keep between 0.05–0.20.
+                </div>
+                <input type="range" min="0.01" max="0.5" step="0.01" value={gbLearningRate}
+                  onChange={e => setGbLearningRate(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--a)' }} />
               </div>
             </div>
           </div>
 
+          {/* ── OPPORTUNITY SENSITIVITY ── */}
           <div>
-            <div className="drawer-section-title">Risk Guardrails</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+            <div className="drawer-section-title">Opportunity Sensitivity</div>
+            <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '10px', lineHeight: '1.5' }}>
+              Controls when a ticket is flagged as a price opportunity. Lower values catch more deals (but also more noise).
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>Min Margin ($)</span>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <span style={{ fontWeight: 600 }}>Minimum Dollar Gap</span>
                   <span className="mono green">${dynThresholdMin}</span>
                 </label>
-                <input 
-                  type="range" min="5" max="100" step="5" value={dynThresholdMin} 
-                  onChange={e => setDynThresholdMin(Number(e.target.value))} 
-                  style={{ width: '100%', accentColor: 'var(--g)' }}
-                />
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '4px' }}>
+                  Only flag tickets where the price gap is at least this many dollars. Increase to filter small deals.
+                </div>
+                <input type="range" min="5" max="100" step="5" value={dynThresholdMin}
+                  onChange={e => setDynThresholdMin(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--g)' }} />
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>Min Margin Percentage</span>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <span style={{ fontWeight: 600 }}>Minimum % Upside</span>
                   <span className="mono cyan">{(dynThresholdPercent * 100).toFixed(0)}%</span>
                 </label>
-                <input 
-                  type="range" min="0.05" max="0.50" step="0.01" value={dynThresholdPercent} 
-                  onChange={e => setDynThresholdPercent(Number(e.target.value))} 
-                  style={{ width: '100%', accentColor: 'var(--c)' }}
-                />
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginBottom: '4px' }}>
+                  Only flag tickets where the margin is at least this % above the floor price. 10–20% is typical.
+                </div>
+                <input type="range" min="0.05" max="0.50" step="0.01" value={dynThresholdPercent}
+                  onChange={e => setDynThresholdPercent(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--c)' }} />
               </div>
             </div>
           </div>
 
+          {/* ── DISPLAY ── */}
+          <div>
+            <div className="drawer-section-title">Display</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--b1)' }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t1)' }}>Theme</div>
+                <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)' }}>Switch between dark and light mode</div>
+              </div>
+              <label className="toggle-wrap" onClick={toggleTheme}>
+                <div className={`toggle ${theme === 'light' ? 'on' : ''}`}><div className="toggle-knob" /></div>
+              </label>
+            </div>
+          </div>
+
+          {/* ── ACTIONS ── */}
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button 
-              className="btn btn-pri" 
+            <button
+              className="btn btn-pri"
               onClick={() => {
                 setDrawerOpen(false);
-                if (rawData) doAnalyze();
+                if (rawData) { doAnalyze(); setTab('dashboard'); }
               }}
               disabled={!rawData}
-              style={{ width: '100%', padding: '10px 0', fontSize: '12px' }}
+              style={{ width: '100%', padding: '11px 0', fontSize: '13px', fontWeight: '700' }}
             >
-              Apply Strategy & Re-run
+              ⚡ Apply &amp; Run Analysis
             </button>
             <button
               className="btn btn-ghost"
-              style={{ width: '100%', padding: '8px 0', fontSize: '11px' }}
+              style={{ width: '100%', padding: '9px 0', fontSize: '11px' }}
               onClick={() => { setDrawerOpen(false); setTab('more'); }}
               disabled={!results}
             >
               📊 Full Analytics &amp; Audit Log
             </button>
-            <div style={{ fontSize: '9px', color: 'var(--t3)', textAlign: 'center', lineHeight: '1.4' }}>
-              Institutional pricing controls active.
-            </div>
+            {results && (
+              <button
+                className="btn btn-ghost"
+                style={{ width: '100%', padding: '9px 0', fontSize: '11px', color: 'var(--g)', borderColor: 'rgba(0,214,143,0.25)' }}
+                onClick={() => { setDrawerOpen(false); dlCSV(results.processed, 'priceguard_corrected_prices.csv'); }}
+              >
+                ↓ Download Corrected Prices CSV
+              </button>
+            )}
             <button
               className="btn btn-ghost"
-              style={{ width: '100%', padding: '8px 0', fontSize: '11px', marginTop: '4px', borderColor: 'rgba(255,54,104,0.25)', color: 'var(--p)' }}
+              style={{ width: '100%', padding: '9px 0', fontSize: '11px', borderColor: 'rgba(255,54,104,0.25)', color: 'var(--p)', marginTop: '4px' }}
               onClick={() => { setDrawerOpen(false); setAuthed(false); setUser(null); setRawData(null); setResults(null); }}
             >
               Sign Out
@@ -649,7 +563,12 @@ export default function App() {
               <div className="ios-card" style={{ borderColor: 'var(--b1)' }}>
                 <div className="card-hd" style={{ padding: '8px 12px' }}>
                   <div className="card-title" style={{ fontSize: '11px' }}>Quick Stabilize Actions</div>
-                  <span className="mono" style={{ fontSize: '8px', color: 'var(--t3)' }}> speculator mitigations</span>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <button className="dl-btn" style={{ padding: '3px 8px', fontSize: '9px' }} onClick={() => dlCSV(results.processed, 'priceguard_corrected_prices.csv')}>
+                      ↓ CSV
+                    </button>
+                    <span className="mono" style={{ fontSize: '8px', color: 'var(--t3)' }}>speculator mitigations</span>
+                  </div>
                 </div>
                 <div className="card-body" style={{ padding: '8px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -746,29 +665,33 @@ export default function App() {
                     <div className="chat-avatar">
                       {m.role === 'ai' ? '🤖' : '👤'}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      {m.role === 'ai' && m.intent && m.intent !== 'SYSTEM' && (
-                        <div className="chat-intent-badge">
-                          🔍 Intent: {m.intent} ({(m.confidence * 100).toFixed(0)}%)
-                        </div>
-                      )}
-                      <div className={`chat-msg ${m.role === 'ai' ? 'chat-ai' : 'chat-user'}`} style={{ margin: 0 }}>
-                        {m.text}
-                      </div>
+                    <div className={`chat-msg ${m.role === 'ai' ? 'chat-ai' : 'chat-user'}`} style={{ margin: 0 }}>
+                      {m.text}
                     </div>
                   </div>
                 ))}
+                {chatTyping && (
+                  <div className="chat-bubble-row ai">
+                    <div className="chat-avatar">🤖</div>
+                    <div className="chat-msg chat-ai chat-typing" style={{ margin: 0 }}>
+                      <span /><span /><span />
+                    </div>
+                  </div>
+                )}
                 <div ref={chatScroll} />
               </div>
 
               {/* Suggestion Chips */}
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '8px 10px', borderTop: '1px solid var(--b1)', background: 'rgba(0,0,0,0.01)', scrollbarWidth: 'none' }}>
                 {[
-                  { label: '📊 Metrics', text: 'What are the model validation metrics?' },
-                  { label: '🛡️ Explain RF', text: 'How does Random Forest work?' },
-                  { label: '📈 Speculation', text: 'What is our current arbitrage exposure?' },
-                  { label: '📍 Hotspots', text: 'Which cities have the highest arbitrage risk?' },
-                  { label: '💡 Advice', text: 'What price stabilization actions are recommended?' }
+                  { label: '📊 Metrics',     text: 'What are the model accuracy metrics?' },
+                  { label: '🛡️ RF Model',    text: 'How does the Random Forest work?' },
+                  { label: '📈 Arbitrage',   text: 'How many flagged arbitrage opportunities?' },
+                  { label: '📍 Hotspots',    text: 'Which cities have the highest arbitrage risk?' },
+                  { label: '💡 Strategy',    text: 'What pricing actions do you recommend?' },
+                  { label: '🚀 Get Started', text: 'How do I get started with PriceGuard?' },
+                  { label: '💾 Export',      text: 'How do I download the corrected prices CSV?' },
+                  { label: '🏦 Arbitrage?',  text: 'What is ticket price arbitrage?' },
                 ].map((chip, idx) => (
                   <button
                     key={idx}
@@ -787,11 +710,11 @@ export default function App() {
                 <input 
                   name="msg" 
                   className="fi ios-chat-input" 
-                  placeholder={results ? "Ask about MAE, RF trees, mitigation advice..." : "Ask about metrics, RF algorithms, hotspots..."}
+                  placeholder="Ask anything about PriceGuard, arbitrage, pricing, AI..."
                   style={{ flex: 1, height: '38px', borderRadius: '8px', border: '1px solid var(--b1)' }} 
                   autoComplete="off" 
                 />
-                <button type="submit" className="btn btn-pri" style={{ padding: '0 14px', height: '38px', borderRadius: '8px' }}>
+                <button type="submit" className="btn btn-pri" disabled={chatTyping} style={{ padding: '0 14px', height: '38px', borderRadius: '8px' }}>
                   Send
                 </button>
               </form>

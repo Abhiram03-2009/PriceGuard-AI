@@ -1,110 +1,191 @@
-import React from 'react';
-import { Donut, Pie } from './Charts';
+import React, { useMemo } from 'react';
+import { Donut, HBar, VBar } from './Charts';
+
+const currency = value => `$${Number(value || 0).toFixed(0)}`;
 
 export default function MarketTab({ results }) {
-  if (!results) {
+  const market = useMemo(() => {
+    if (!results) return null;
+
+    const processed = results.processed || [];
+    const arbEvents = results.arbEvents || [];
+    const totalGap = arbEvents.reduce((s, d) => s + (d.arbitrage_margin || 0), 0);
+    const avgFloor = processed.reduce((s, d) => s + (d.lowest_price || 0), 0) / (processed.length || 1);
+    const avgAudit = processed.reduce((s, d) => s + (d.corrected_price || 0), 0) / (processed.length || 1);
+    const avgListing = processed.reduce((s, d) => s + (Number(d.listing_count) || 0), 0) / (processed.length || 1);
+    const volatility = Math.min(99, Math.max(8, (results.rmse / Math.max(avgAudit, 1)) * 100));
+
+    const top = [...processed]
+      .sort((a, b) => (b.arbitrage_margin || 0) - (a.arbitrage_margin || 0))
+      .slice(0, 6)
+      .map(item => {
+        const base = String(item.title || 'MARKET').replace(/[^A-Za-z0-9 ]/g, '').trim();
+        const symbol = base.split(/\s+/).slice(0, 2).map(w => w[0]).join('').padEnd(3, 'X').slice(0, 4).toUpperCase();
+        const spread = Math.max(0, item.corrected_price - item.lowest_price);
+        const change = item.lowest_price ? (spread / item.lowest_price) * 100 : 0;
+        return { ...item, symbol, spread, change };
+      });
+
+    const sectors = ['Sports', 'Concert', 'Theater', 'Family'].map(type => {
+      const rows = processed.filter(d => String(d.event_type || '').toLowerCase().includes(type.toLowerCase()));
+      return {
+        label: type,
+        count: rows.length,
+        risk: rows.length ? rows.filter(d => d.arbitrage === 1).length / rows.length * 100 : 0,
+      };
+    }).filter(s => s.count > 0);
+
+    return { processed, arbEvents, totalGap, avgFloor, avgAudit, avgListing, volatility, top, sectors };
+  }, [results]);
+
+  if (!market) {
     return (
-      <div className="fade" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-        <div style={{ fontSize: '40px', marginBottom: 14, opacity: 0.4 }}>📊</div>
-        <div style={{ fontFamily: "'Syne'", fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: 7 }}>No Market Data</div>
-        <div style={{ color: '#fff', fontSize: '12px' }}>Run the AI Audit on the Dashboard to generate market intelligence.</div>
+      <div className="fade empty-market">
+        <div className="market-empty-glyph" />
+        <div className="empty-title">No Market Data</div>
+        <div className="empty-copy">Run the AI Audit on the Dashboard to generate market intelligence.</div>
       </div>
     );
   }
 
-  // Calculate market saturation and volatility
-  const avgMargin = results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0) / (results.arbEvents.length || 1);
-  const saturation = (results.arbEvents.length / results.totalEvents) * 100;
+  const sourceCards = [
+    { code: 'SG', name: 'SeatGeek', status: 'Connected', tone: 'green', detail: `${market.processed.length} event rows` },
+    { code: 'TM', name: 'Ticketmaster', status: 'Ready', tone: 'blue', detail: 'CSV/API mapping enabled' },
+    { code: 'YF', name: 'Yahoo Finance', status: 'Watchlist', tone: 'cyan', detail: 'Ticker view modeled' },
+    { code: 'BX', name: 'Broker Index', status: 'Derived', tone: 'amber', detail: 'Liquidity proxy active' },
+  ];
+
+  const sectorLabels = market.sectors.length ? market.sectors.map(s => s.label) : ['Ticket Market'];
+  const sectorRisk = market.sectors.length ? market.sectors.map(s => +s.risk.toFixed(1)) : [+(results.arbRate * 100).toFixed(1)];
 
   return (
-    <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-      <div className="card">
-        <div className="card-hd"><div className="card-title" style={{ color: '#fff' }}>Market Vulnerability Index</div></div>
-        <div className="card-body">
-          <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-            <Donut value={saturation} color="#ff3668" label="SATURATION" />
-            <Donut value={results.f1 * 100} color="#00d68f" label="CONFIDENCE" />
-            <Donut value={results.arbRate * 100} color="#18a8ff" label="EXPOSURE" />
-            
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase' }}>
-                  <span>Speculative Pressure</span>
-                  <span>{saturation.toFixed(1)}%</span>
-                </div>
-                <div className="prog-wrap" style={{ height: '8px' }}><div className="prog" style={{ width: saturation + '%', background: 'var(--p)' }} /></div>
-              </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase' }}>
-                  <span>Model Audit Coverage</span>
-                  <span>{(results.r2 * 100).toFixed(1)}%</span>
-                </div>
-                <div className="prog-wrap" style={{ height: '8px' }}><div className="prog" style={{ width: (results.r2 * 100) + '%', background: 'var(--b)' }} /></div>
-              </div>
+    <div className="fade market-terminal">
+      <section className="market-hero">
+        <div>
+          <div className="market-eyebrow">Live Ticket Market</div>
+          <h2>Pricing Desk</h2>
+          <p>Cross-source arbitrage, liquidity pressure, and fair-value movement from the current audit.</p>
+        </div>
+        <div className="market-hero-metrics">
+          <span>F1 {(results.f1 * 100).toFixed(0)}%</span>
+          <span>R2 {(results.r2 * 100).toFixed(0)}%</span>
+          <span>{market.arbEvents.length} flags</span>
+        </div>
+      </section>
+
+      <div className="ticker-strip" aria-label="Current ticket market tickers">
+        {market.top.map(item => (
+          <div key={item.event_id || item.symbol} className="ticker-tile">
+            <div>
+              <span className="ticker-symbol">{item.symbol}</span>
+              <span className="ticker-name">{item.city || 'Market'}</span>
             </div>
+            <strong>{currency(item.corrected_price)}</strong>
+            <span className={item.change > 0 ? 'ticker-up' : 'ticker-flat'}>
+              {item.change > 0 ? '+' : ''}{item.change.toFixed(1)}%
+            </span>
           </div>
+        ))}
+      </div>
+
+      <div className="market-kpi-grid">
+        <div className="market-kpi">
+          <span>Fair Value</span>
+          <strong>{currency(market.avgAudit)}</strong>
+          <small>Average audit price</small>
+        </div>
+        <div className="market-kpi">
+          <span>Floor Basis</span>
+          <strong>{currency(market.avgFloor)}</strong>
+          <small>Listed floor mean</small>
+        </div>
+        <div className="market-kpi danger">
+          <span>Spread Gap</span>
+          <strong>{currency(market.totalGap)}</strong>
+          <small>Recoverable leakage</small>
+        </div>
+        <div className="market-kpi">
+          <span>Liquidity</span>
+          <strong>{market.avgListing.toFixed(1)}x</strong>
+          <small>Avg listing depth</small>
         </div>
       </div>
 
-      <div className="two-col">
-        <div className="card">
-          <div className="card-hd"><div className="card-title" style={{ color: '#fff' }}>Ensemble Decision Weights</div></div>
-          <div className="card-body" style={{ minHeight: '300px' }}>
-            <Pie 
-              labels={['Random Forest', 'Gradient Boosting', 'Demand Vector', 'Scarcity Bias']}
-              data={[58, 42, 25, 15]}
-              colors={['#18a8ff', '#ff3668', '#00d68f', '#f5a623']}
-            />
-            <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div style={{ padding: '10px', background: 'rgba(24,168,255,0.05)', borderRadius: '8px', border: '1px solid var(--b1)' }}>
-                <div style={{ color: '#18a8ff', fontSize: '10px', fontWeight: '700' }}>RF WEIGHT</div>
-                <div style={{ color: '#fff', fontSize: '18px', fontWeight: '800' }}>58.4%</div>
-              </div>
-              <div style={{ padding: '10px', background: 'rgba(255,54,104,0.05)', borderRadius: '8px', border: '1px solid var(--p1)' }}>
-                <div style={{ color: 'var(--p)', fontSize: '10px', fontWeight: '700' }}>GBM WEIGHT</div>
-                <div style={{ color: '#fff', fontSize: '18px', fontWeight: '800' }}>41.6%</div>
-              </div>
+      <div className="source-grid">
+        {sourceCards.map(src => (
+          <div key={src.code} className="source-card">
+            <div className={`source-icon ${src.tone}`}>{src.code}</div>
+            <div>
+              <strong>{src.name}</strong>
+              <span>{src.status}</span>
+              <small>{src.detail}</small>
             </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="card">
-          <div className="card-hd"><div className="card-title" style={{ color: '#fff' }}>Market Velocity Analytics</div></div>
-          <div className="card-body">
-            <div className="insight" style={{ marginBottom: '1rem', borderLeftColor: 'var(--b)' }}>
-              <div className="insight-lbl" style={{ color: 'var(--b)' }}>Velocity Vector</div>
-              <div style={{ color: '#fff' }}>Current market trends indicate a <strong>{(results.arbRate * 1.8).toFixed(2)}x</strong> increase in secondary market speculation for top-tier events.</div>
-            </div>
-            <div className="insight gn" style={{ marginBottom: '1rem', borderLeftColor: 'var(--g)' }}>
-              <div className="insight-lbl gn" style={{ color: 'var(--g)' }}>Audit Integrity</div>
-              <div style={{ color: '#fff' }}>Ensemble cross-verification successfully filtered out <strong>{Math.round(results.totalEvents * 0.12)}</strong> false positive arbitrage signals.</div>
-            </div>
-            <div style={{ marginTop: '1.5rem', padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--b1)' }}>
-              <div style={{ color: '#fff', fontSize: '11px', opacity: 0.7, marginBottom: '5px' }}>AVG AUDIT MARGIN</div>
-              <div style={{ color: '#fff', fontSize: '28px', fontWeight: '800' }}>${avgMargin.toFixed(2)}</div>
-              <div style={{ color: 'var(--g)', fontSize: '10px', marginTop: '5px' }}>↑ RECUPERABLE PER NODE</div>
-            </div>
-          </div>
+      <div className="ios-card market-panel">
+        <div className="card-hd">
+          <div className="card-title">Market Vulnerability Index</div>
+          <span className="mono panel-meta">terminal view</span>
+        </div>
+        <div className="card-body market-gauge-row">
+          <Donut value={results.arbRate * 100} color="#18a8ff" label="Exposure" />
+          <Donut value={market.volatility} color="#00e5cc" label="Volatility" />
+          <Donut value={results.f1 * 100} color="#00d68f" label="Confidence" />
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-hd"><div className="card-title" style={{ color: '#fff' }}>Regional Vulnerability Hotspots</div></div>
+      <div className="ios-card market-panel">
+        <div className="card-hd">
+          <div className="card-title">Sector Risk Heatmap</div>
+          <span className="mono panel-meta">risk by category</span>
+        </div>
         <div className="card-body">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            {results.topCities.map((c, i) => (
-              <div key={i} style={{ padding: '15px', background: 'rgba(24,168,255,0.03)', borderRadius: '10px', border: '1px solid var(--b1)' }}>
-                <div style={{ color: '#fff', fontSize: '14px', fontWeight: '700', marginBottom: '10px' }}>{c.city}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontSize: '10px', marginBottom: '5px' }}>
-                  <span>Flagged Nodes</span>
-                  <span style={{ color: c.arb > 0 ? 'var(--p)' : 'var(--g)' }}>{c.arb}</span>
-                </div>
-                <div className="prog-wrap" style={{ height: '4px' }}>
-                  <div className="prog" style={{ width: (c.arb / c.count * 100) + '%', background: c.arb > 0 ? 'var(--p)' : 'var(--g)' }} />
-                </div>
+          <HBar
+            labels={sectorLabels}
+            data={sectorRisk}
+            colors={sectorRisk.map(v => v > 30 ? 'rgba(255,54,104,0.42)' : 'rgba(24,168,255,0.30)')}
+            height={150}
+          />
+        </div>
+      </div>
+
+      <div className="ios-card market-panel">
+        <div className="card-hd">
+          <div className="card-title">Current Ticket Market</div>
+          <span className="mono panel-meta">highest spreads</span>
+        </div>
+        <div className="market-table">
+          {market.top.map(item => (
+            <div key={item.event_id || item.symbol} className="market-row">
+              <div>
+                <strong>{item.symbol}</strong>
+                <span>{item.title}</span>
               </div>
-            ))}
-          </div>
+              <div className="market-row-prices">
+                <span>{currency(item.lowest_price)}</span>
+                <strong>{currency(item.corrected_price)}</strong>
+                <em>+{currency(item.spread)}</em>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="ios-card market-panel">
+        <div className="card-hd">
+          <div className="card-title">Spread Distribution</div>
+          <span className="mono panel-meta">Fidelity-style bar view</span>
+        </div>
+        <div className="card-body">
+          <VBar
+            labels={results.margDist.map(b => b.label)}
+            data={results.margDist.map(b => b.count)}
+            color="rgba(24, 168, 255, 0.24)"
+            bc="#18a8ff"
+            height={170}
+          />
         </div>
       </div>
     </div>
