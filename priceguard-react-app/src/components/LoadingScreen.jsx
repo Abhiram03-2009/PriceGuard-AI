@@ -1,44 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import logo from '../logo.png';
+import React, { useEffect, useMemo, useState } from 'react';
 
-const PARTICLES = ['BTC', 'ETH', 'SOL', '$', 'XRP', 'ADA', 'DOT', 'LTC', 'ARB', 'USD'];
+const PARTICLES = ['BTC', 'ETH', 'SOL', 'USD', 'CME', 'NYSE', 'ASK', 'BID', 'VOL', 'YLD', 'ARB', 'IDX'];
 const LOADER_STEPS = [
-  'INITIALIZING PRICEGUARD AI ENSEMBLE SYSTEM...',
-  'CONNECTING SEATGEEK DATA STREAM NODES...',
-  'ESTABLISHING ENSEMBLE REGRESSION NETWORKS...',
-  'OPTIMIZING ARBITRAGE EXPOSURE TOLERANCE...',
-  'TICKET ENGINE ONLINE. DEPLOYING DASHBOARD...'
+  'Booting market intelligence core…',
+  'Syncing ticket liquidity streams…',
+  'Calibrating spread and floor models…',
+  'Loading ensemble arbitrage engine…',
+  'Validating price tolerance bands…',
+  'Running risk classification layer…',
+  'Opening PriceGuard terminal…',
 ];
 
 export default function LoadingScreen({ onFinished }) {
   const [isZooming, setIsZooming] = useState(false);
-  const [particles, setParticles] = useState([]);
-  const [loadingText, setLoadingText] = useState(LOADER_STEPS[0]);
+  const [stepIdx, setStepIdx] = useState(0);
+
+  const particles = useMemo(() => (
+    Array.from({ length: 28 }, (_, i) => ({
+      id: i,
+      text: PARTICLES[i % PARTICLES.length],
+      left: ((i * 31) % 90) + 5,
+      delay: (i % 9) * 0.38,
+      size: 10 + (i % 5) * 2,
+      duration: 8 + (i % 7),
+    }))
+  ), []);
 
   useEffect(() => {
-    // Generate random particles floating up
-    const list = Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      text: PARTICLES[Math.floor(Math.random() * PARTICLES.length)],
-      left: Math.random() * 92 + 4,
-      delay: Math.random() * 5,
-      size: Math.random() * 8 + 10,
-      duration: Math.random() * 5 + 6,
-    }));
-    setParticles(list);
-
-    // Rotate through loader steps
-    const stepTimers = LOADER_STEPS.map((text, idx) => {
-      return setTimeout(() => {
-        setLoadingText(text);
-      }, idx * 750);
-    });
-
-    // Zoom-in effect starts 750ms before unmounting
-    const zoomTimer = setTimeout(() => setIsZooming(true), 3200);
-    const finishTimer = setTimeout(() => {
-      if (onFinished) onFinished();
-    }, 3950);
+    // Step through loading messages every 900ms — total ~6.3s
+    const stepTimers = LOADER_STEPS.map((_, idx) =>
+      setTimeout(() => setStepIdx(idx), idx * 900)
+    );
+    // Zoom-out at 6.0s, finish at 6.9s
+    const zoomTimer  = setTimeout(() => setIsZooming(true), 6000);
+    const finishTimer = setTimeout(() => onFinished?.(), 6900);
 
     return () => {
       stepTimers.forEach(clearTimeout);
@@ -49,9 +44,10 @@ export default function LoadingScreen({ onFinished }) {
 
   return (
     <div className={`loading ${isZooming ? 'zoom-out' : ''}`}>
-      {/* Crypto Animated Background */}
+      {/* Animated background */}
       <div className="crypto-bg">
         <div className="crypto-grid" />
+        <div className="market-scanline" />
         {particles.map(p => (
           <div
             key={p.id}
@@ -68,34 +64,37 @@ export default function LoadingScreen({ onFinished }) {
         ))}
       </div>
 
-      {/* Large Spinning Coin */}
-      <div className="coin-container" style={{ transform: isZooming ? 'scale(2.5) translateZ(100px)' : 'none', transition: 'transform 0.8s cubic-bezier(0.1, 0.8, 0.25, 1)' }}>
-        <div className="coin">
-          {/* Front of coin */}
+      {/* Cyber Blue Bitcoin Coin — Y-axis only spin */}
+      <div className={`coin-container ${isZooming ? 'coin-zoom' : ''}`}>
+        <div className="coin coin-y-spin">
+          <div className="coin-edge" />
           <div className="coin-side coin-front">
-            <img src={logo} alt="PriceGuard AI Logo" />
+            <div className="coin-circuit" />
+            <span className="coin-symbol">$</span>
           </div>
-          {/* Back of coin */}
           <div className="coin-side coin-back">
-            <img src={logo} alt="PriceGuard AI Logo" />
+            <div className="coin-circuit" />
+            <span className="coin-symbol">PG</span>
           </div>
         </div>
       </div>
 
-      <div className="load-title" style={{ fontSize: '20px', color: 'var(--b)', letterSpacing: '4px', fontWeight: '800', fontFamily: 'var(--fh)', textShadow: '0 0 10px rgba(24,168,255,0.3)' }}>
-        PriceGuard <span style={{ color: 'var(--t1)' }}>AI</span>
+      {/* Brand */}
+      <div className="load-title wordmark load-wordmark">
+        <span className="wordmark-main">PriceGuard</span>
+        <span className="wordmark-ai">AI</span>
       </div>
 
-      <div className="load-sub" style={{ fontSize: '9px', color: 'var(--t3)', letterSpacing: '2px', textTransform: 'uppercase', marginTop: '4px', fontFamily: 'var(--fm)' }}>
-        Arbitrage Intelligence Platform
+      <div className="load-sub">Market Protection Terminal</div>
+
+      {/* Animated step text */}
+      <div className="load-status load-step-text" key={stepIdx}>
+        {LOADER_STEPS[stepIdx]}
       </div>
 
-      <div className="load-status" style={{ marginTop: '30px', fontFamily: 'var(--fm)', color: 'var(--t2)', fontSize: '9px', letterSpacing: '1px', textTransform: 'uppercase', height: '14px', textAlign: 'center' }}>
-        {loadingText}
-      </div>
-
-      <div className="load-bar-wrap" style={{ marginTop: '15px' }}>
-        <div className="load-bar" style={{ animationDuration: '3.2s' }} />
+      {/* Progress bar — runs for ~6s */}
+      <div className="load-bar-wrap">
+        <div className="load-bar load-bar-long" />
       </div>
     </div>
   );

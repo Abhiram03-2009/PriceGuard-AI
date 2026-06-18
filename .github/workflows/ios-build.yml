@@ -1,4 +1,4 @@
-name: Build and Release iOS App
+name: Build and Release iOS App — v10
 
 on:
   push:
