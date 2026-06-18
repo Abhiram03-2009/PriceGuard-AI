@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import MarketTab from './components/MarketTab';
 import FetchTab from './components/FetchTab';
+import NewsTab from './components/NewsTab';
+import PortfolioTab from './components/PortfolioTab';
+import AuthScreen from './components/AuthScreen';
 import { ForecastChart, ScatterLinChart, HBar, VBar } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
 import LoadingScreen from './components/LoadingScreen';
@@ -98,6 +101,8 @@ function classifyIntent(text) {
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [authed, setAuthed] = useState(false);
+  const [user, setUser] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
   const [dataMode, setDataMode] = useState('public');
@@ -355,8 +360,8 @@ export default function App() {
     const hasData = !!rawData;
     return (
       <div className="fade ios-card" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', margin: '1rem 0', border: '1px solid var(--b1)' }}>
-        <div style={{ fontSize: '48px', marginBottom: '14px', filter: 'drop-shadow(0 4px 10px rgba(24,168,255,0.25))' }}>
-          {hasData ? '⚡' : '📂'}
+        <div className="empty-state-glyph-wrap">
+          <span className={`empty-state-glyph ${hasData ? 'audit' : 'data'}`} aria-hidden="true" />
         </div>
         <h3 style={{ fontFamily: "'Syne'", fontSize: '16px', fontWeight: '700', color: 'var(--t1)', marginBottom: '8px' }}>
           {hasData ? 'AI Audit Pending' : 'No Data Loaded'}
@@ -387,17 +392,21 @@ export default function App() {
     return <LoadingScreen onFinished={() => setLoading(false)} />;
   }
 
+  if (!authed) {
+    return <AuthScreen onAuth={(userData) => { setUser(userData); setAuthed(true); }} />;
+  }
+
   // Define metric values for the dashboard
   const stats = results ? (dataMode === 'enterprise' ? [
-    { lbl: 'Audit Mode', val: 'OPTIMAL', cl: 'g', sub: `F1 Accuracy: ${(results.f1*100).toFixed(0)}%`, ico: '🛡' },
-    { lbl: 'Revenue Leakage', val: '$' + results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0).toFixed(0), cl: 'p', sub: `${results.arbEvents.length} flagged assets`, ico: '⚠' },
-    { lbl: 'Speculation Rate', val: (results.arbRate * 100).toFixed(1) + '%', cl: 'c', sub: 'Nodes above tolerance', ico: '⚡' },
-    { lbl: 'Mean Abs Error', val: '$' + results.mae.toFixed(1), cl: 'b', sub: 'Price projection variance', ico: '◎' },
+    { lbl: 'Audit Mode', val: 'OPTIMAL', cl: 'g', sub: `F1 Accuracy: ${(results.f1*100).toFixed(0)}%`, ico: 'AI' },
+    { lbl: 'Revenue Leakage', val: '$' + results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0).toFixed(0), cl: 'p', sub: `${results.arbEvents.length} flagged assets`, ico: '$' },
+    { lbl: 'Speculation Rate', val: (results.arbRate * 100).toFixed(1) + '%', cl: 'c', sub: 'Nodes above tolerance', ico: '%' },
+    { lbl: 'Mean Abs Error', val: '$' + results.mae.toFixed(1), cl: 'b', sub: 'Price projection variance', ico: 'MAE' },
   ] : [
-    { lbl: 'Arbitrage Exposure', val: (results.arbRate * 100).toFixed(1) + '%', cl: 'p', sub: `${results.arbEvents.length} opportunities`, ico: '📈' },
-    { lbl: 'Validation F1', val: (results.f1 * 100).toFixed(0) + '%', cl: 'g', sub: 'Prediction confidence', ico: '✓' },
-    { lbl: 'Total Margin Gap', val: '$' + results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0).toFixed(0), cl: 'b', sub: 'Estimated lost yield', ico: '±' },
-    { lbl: 'Scanned Records', val: results.totalEvents, cl: 'c', sub: 'Active database rows', ico: '⬡' },
+    { lbl: 'Arbitrage Exposure', val: (results.arbRate * 100).toFixed(1) + '%', cl: 'p', sub: `${results.arbEvents.length} opportunities`, ico: 'IDX' },
+    { lbl: 'Validation F1', val: (results.f1 * 100).toFixed(0) + '%', cl: 'g', sub: 'Prediction confidence', ico: 'F1' },
+    { lbl: 'Total Margin Gap', val: '$' + results.arbEvents.reduce((s, d) => s + d.arbitrage_margin, 0).toFixed(0), cl: 'b', sub: 'Estimated lost yield', ico: '$' },
+    { lbl: 'Scanned Records', val: results.totalEvents, cl: 'c', sub: 'Active database rows', ico: 'DB' },
   ]) : [];
 
   return (
@@ -416,16 +425,23 @@ export default function App() {
         dataMode={dataMode}
       />
 
-      {/* Hamburger Drawer Settings Overlay */}
+      {/* Hamburger Drawer — Command Center */}
       <div className={`drawer-overlay ${drawerOpen ? 'open' : ''}`} onClick={() => setDrawerOpen(false)} />
       <div className={`drawer ${drawerOpen ? 'open' : ''}`}>
         <div className="drawer-header">
-          <div className="drawer-title">Settings & Tuning</div>
+          <div>
+            <div className="drawer-title">Command Center</div>
+            {user && (
+              <div style={{ fontFamily: 'var(--fm)', fontSize: '9px', color: 'var(--t3)', marginTop: '2px' }}>
+                {user.provider === 'google' ? '🔵' : user.provider === 'apple' ? '⚫' : '✉️'} {user.email}
+              </div>
+            )}
+          </div>
           <button className="modal-close" onClick={() => setDrawerOpen(false)} style={{ fontSize: '20px' }}>&times;</button>
         </div>
         <div className="drawer-body">
           <div>
-            <div className="drawer-section-title">ML Model Parameters</div>
+            <div className="drawer-section-title">Model Strategy</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -464,7 +480,7 @@ export default function App() {
           </div>
 
           <div>
-            <div className="drawer-section-title">Arbitrage Bounds Guard</div>
+            <div className="drawer-section-title">Risk Guardrails</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -501,11 +517,26 @@ export default function App() {
               disabled={!rawData}
               style={{ width: '100%', padding: '10px 0', fontSize: '12px' }}
             >
-              ⚡ Apply Settings & Re-run
+              Apply Strategy & Re-run
+            </button>
+            <button
+              className="btn btn-ghost"
+              style={{ width: '100%', padding: '8px 0', fontSize: '11px' }}
+              onClick={() => { setDrawerOpen(false); setTab('more'); }}
+              disabled={!results}
+            >
+              📊 Full Analytics &amp; Audit Log
             </button>
             <div style={{ fontSize: '9px', color: 'var(--t3)', textAlign: 'center', lineHeight: '1.4' }}>
-              Rebrand Re-engineered for DECA. Secure mobile inventory models active.
+              Institutional pricing controls active.
             </div>
+            <button
+              className="btn btn-ghost"
+              style={{ width: '100%', padding: '8px 0', fontSize: '11px', marginTop: '4px', borderColor: 'rgba(255,54,104,0.25)', color: 'var(--p)' }}
+              onClick={() => { setDrawerOpen(false); setAuthed(false); setUser(null); setRawData(null); setResults(null); }}
+            >
+              Sign Out
+            </button>
           </div>
         </div>
       </div>
@@ -554,10 +585,10 @@ export default function App() {
                 style={{ padding: '2rem 1.5rem', borderWidth: '1.5px' }}
               >
                 <div className="upload-icon" style={{ fontSize: '24px', marginBottom: '8px' }}>
-                  {dataMode === 'enterprise' ? '🛡️' : '📁'}
+                  <span className={`upload-glyph ${dataMode === 'enterprise' ? 'secure' : 'file'}`} aria-hidden="true" />
                 </div>
                 <div className="upload-title" style={{ fontSize: '13.5px' }}>
-                  {dataMode === 'enterprise' ? 'Secure Audit Node Ingestion' : 'Ingest Ticket Inventory CSV'}
+                  {dataMode === 'enterprise' ? 'Secure Market Data Ingestion' : 'Ingest Ticket Market CSV'}
                 </div>
                 <div className="upload-sub" style={{ fontSize: '10.5px', marginBottom: '12px' }}>
                   Drop csv or click to upload. SeatGeek, Ticketmaster, and other primary sources are supported.
@@ -678,6 +709,12 @@ export default function App() {
           results ? <MarketTab results={results} /> : renderEmptyState('Market Spotlights')
         )}
 
+        {/* ────────────── TAB: NEWS ────────────── */}
+        {tab === 'news' && <NewsTab />}
+
+        {/* ────────────── TAB: PORTFOLIO ────────────── */}
+        {tab === 'portfolio' && <PortfolioTab results={results} />}
+
         {/* ────────────── TAB: CHAT ────────────── */}
         {tab === 'chat' && (
           <div className="fade" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 170px)' }}>
@@ -762,7 +799,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ────────────── TAB: MORE (METRICS & LOGS) ────────────── */}
+        {/* ────────────── TAB: MORE (ANALYTICS & LOGS) — accessible from Dashboard ────────────── */}
         {tab === 'more' && (
           results ? (
             <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -887,12 +924,13 @@ export default function App() {
       {/* iOS Bottom Navigation Bar */}
       <BottomTabs tab={tab} setTab={setTab} />
 
-      {/* iOS Footer styled to fit bottom container */}
+      {/* iOS Footer */}
       <footer style={{ padding: '10px 16px', fontSize: '8px', borderBottom: 'none' }}>
         <div style={{ color: 'var(--t3)' }}>&copy; 2026 ARBITRAGE INTELLIGENCE.</div>
         <div style={{ display: 'flex', gap: '8px', color: 'var(--t3)' }}>
-          <span>NODE: v2.0-iOS</span>
-          <span style={{ color: 'var(--g)' }}>STATUS: ONLINE</span>
+          {user && <span style={{ color: 'var(--b)' }}>{user.name}</span>}
+          <span>v10.0-iOS</span>
+          <span style={{ color: 'var(--g)' }}>ONLINE</span>
         </div>
       </footer>
     </div>
