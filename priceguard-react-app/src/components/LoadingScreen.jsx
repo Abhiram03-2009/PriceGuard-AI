@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import logo from '../logo.png';
 
 const PARTICLES = ['BTC', 'ETH', 'SOL', 'USD', 'CME', 'NYSE', 'ASK', 'BID', 'VOL', 'YLD', 'ARB', 'IDX'];
 const LOADER_STEPS = [
@@ -27,12 +28,10 @@ export default function LoadingScreen({ onFinished }) {
   ), []);
 
   useEffect(() => {
-    // Step through loading messages every 900ms — total ~6.3s
     const stepTimers = LOADER_STEPS.map((_, idx) =>
       setTimeout(() => setStepIdx(idx), idx * 900)
     );
-    // Zoom-out at 6.0s, finish at 6.9s
-    const zoomTimer  = setTimeout(() => setIsZooming(true), 6000);
+    const zoomTimer   = setTimeout(() => setIsZooming(true), 6000);
     const finishTimer = setTimeout(() => onFinished?.(), 6900);
 
     return () => {
@@ -44,27 +43,17 @@ export default function LoadingScreen({ onFinished }) {
 
   return (
     <div className={`loading ${isZooming ? 'zoom-out' : ''}`}>
-      {/* Animated background */}
       <div className="crypto-bg">
         <div className="crypto-grid" />
         <div className="market-scanline" />
         {particles.map(p => (
-          <div
-            key={p.id}
-            className="crypto-particle"
-            style={{
-              left: `${p.left}%`,
-              animationDelay: `${p.delay}s`,
-              fontSize: `${p.size}px`,
-              animationDuration: `${p.duration}s`,
-            }}
-          >
+          <div key={p.id} className="crypto-particle" style={{ left: `${p.left}%`, animationDelay: `${p.delay}s`, fontSize: `${p.size}px`, animationDuration: `${p.duration}s` }}>
             {p.text}
           </div>
         ))}
       </div>
 
-      {/* Cyber Blue Bitcoin Coin — Y-axis only spin */}
+      {/* Cyber Blue coin — Y-axis only, real logo on back face */}
       <div className={`coin-container ${isZooming ? 'coin-zoom' : ''}`}>
         <div className="coin coin-y-spin">
           <div className="coin-edge" />
@@ -74,25 +63,23 @@ export default function LoadingScreen({ onFinished }) {
           </div>
           <div className="coin-side coin-back">
             <div className="coin-circuit" />
-            <span className="coin-symbol">PG</span>
+            {/* Real app logo on back face */}
+            <img src={logo} alt="PriceGuard AI" className="coin-logo-img" />
           </div>
         </div>
       </div>
 
-      {/* Brand */}
       <div className="load-title wordmark load-wordmark">
-        <span className="wordmark-main">PriceGuard</span>
-        <span className="wordmark-ai">AI</span>
+        <span className="load-wm-price">Price</span><span className="load-wm-guard">Guard</span>
+        <span className="wordmark-ai">&nbsp;AI</span>
       </div>
 
       <div className="load-sub">Market Protection Terminal</div>
 
-      {/* Animated step text */}
       <div className="load-status load-step-text" key={stepIdx}>
         {LOADER_STEPS[stepIdx]}
       </div>
 
-      {/* Progress bar — runs for ~6s */}
       <div className="load-bar-wrap">
         <div className="load-bar load-bar-long" />
       </div>

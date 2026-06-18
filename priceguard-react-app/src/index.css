@@ -988,6 +988,32 @@ body.light-theme .chat-intent-badge {
   margin-bottom: 10px;
   line-height: 1.4;
 }
+.chat-msg.chat-ai,
+.chat-msg.chat-user {
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+.chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+  min-height: 32px;
+}
+.chat-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--b);
+  opacity: 0.35;
+  animation: chat-typing-dot 1.2s ease-in-out infinite;
+}
+.chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes chat-typing-dot {
+  0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
 
 /* ── TIGHTEN MAIN CONTENT PADDINGS FOR MOBILE ── */
 @media (min-width: 481px) {
@@ -2110,4 +2136,321 @@ body.light-theme .news-terminal p { color: #2c3e50 !important; }
   box-shadow:
     0 0 28px rgba(24, 168, 255, 0.45),
     inset 0 0 18px rgba(255, 255, 255, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRICEGUARD AI v11 — NAVBAR, BRAND, DRAWER, AUTH FIXES
+   ══════════════════════════════════════════════════════════ */
+
+/* ── NAVBAR WORDMARK — bigger, neon cyber blue ── */
+.nav-wordmark {
+  transform: skewX(-5deg);
+  gap: 0;
+  line-height: 1;
+}
+.nav-wm-price {
+  font-family: var(--fnav);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #18e8ff;
+  text-shadow:
+    0 0 8px rgba(24, 232, 255, 0.85),
+    0 0 22px rgba(24, 168, 255, 0.55),
+    0 0 40px rgba(0, 229, 204, 0.3);
+  text-transform: uppercase;
+}
+.nav-wm-guard {
+  font-family: var(--fnav);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #18e8ff;
+  text-shadow:
+    0 0 8px rgba(24, 232, 255, 0.85),
+    0 0 22px rgba(24, 168, 255, 0.55),
+    0 0 40px rgba(0, 229, 204, 0.3);
+  text-transform: uppercase;
+}
+.nav-wm-ai {
+  font-family: var(--fnav);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+/* Bigger logo in navbar */
+.ios-header-logo {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  object-fit: cover;
+  border: 1px solid rgba(24, 232, 255, 0.4);
+  box-shadow: 0 0 10px rgba(24, 168, 255, 0.3);
+}
+
+/* Light mode navbar wordmark — keep cyber blue readable */
+body.light-theme .nav-wm-price,
+body.light-theme .nav-wm-guard {
+  color: #0078cc;
+  text-shadow:
+    0 0 6px rgba(0, 120, 204, 0.4),
+    0 0 14px rgba(24, 168, 255, 0.2);
+}
+body.light-theme .nav-wm-ai {
+  color: #121824;
+  text-shadow: none;
+  font-style: italic;
+}
+
+/* ── LOADING SCREEN WORDMARK ── */
+.load-wm-price,
+.load-wm-guard {
+  font-family: var(--fnav);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #18e8ff;
+  text-shadow:
+    0 0 10px rgba(24, 232, 255, 0.9),
+    0 0 28px rgba(24, 168, 255, 0.6),
+    0 0 50px rgba(0, 229, 204, 0.35);
+  text-transform: uppercase;
+}
+
+/* ── COIN LOGO IMAGE ── */
+.coin-logo-img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 8px rgba(24, 168, 255, 0.6));
+}
+
+/* ── AUTH WORDMARK ── */
+.auth-wm-price,
+.auth-wm-guard {
+  font-family: var(--fnav);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #18e8ff;
+  text-shadow:
+    0 0 10px rgba(24, 232, 255, 0.85),
+    0 0 24px rgba(24, 168, 255, 0.5);
+  text-transform: uppercase;
+}
+.auth-wm-ai {
+  font-family: var(--fnav);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-style: italic;
+}
+body.light-theme .auth-wm-price,
+body.light-theme .auth-wm-guard {
+  color: #0078cc;
+  text-shadow: 0 0 8px rgba(0, 120, 204, 0.3);
+}
+body.light-theme .auth-wm-ai {
+  color: #121824;
+  text-shadow: none;
+}
+
+/* ── PROFILE AVATAR PICKER ── */
+.avatar-picker {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--b2);
+  background: rgba(24, 168, 255, 0.07);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.avatar-picker:hover {
+  border-color: var(--b);
+  box-shadow: 0 0 18px rgba(24, 168, 255, 0.3);
+}
+.avatar-initials {
+  font-family: var(--fnav);
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--b);
+  letter-spacing: 0.08em;
+}
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar-edit-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* ── DRAWER PROFILE CARD ── */
+.drawer-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(24, 168, 255, 0.05);
+  border: 1px solid var(--b1);
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+.drawer-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid var(--b2);
+  background: rgba(24, 168, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.drawer-avatar-initials {
+  font-family: var(--fnav);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--b);
+  letter-spacing: 0.06em;
+}
+
+/* Light mode drawer profile */
+body.light-theme .drawer-profile-card {
+  background: rgba(24, 168, 255, 0.03);
+  border-color: rgba(24, 168, 255, 0.12);
+}
+
+/* ── MARKET TAB — ALL TEXT BLACK IN LIGHT MODE ── */
+body.light-theme .market-terminal * {
+  color: inherit;
+}
+body.light-theme .market-hero h2 { color: #121824 !important; }
+body.light-theme .market-hero p  { color: #2c3e50 !important; }
+body.light-theme .market-eyebrow { color: #0078cc !important; }
+body.light-theme .market-hero-metrics span { color: #2c3e50 !important; }
+body.light-theme .ticker-symbol  { color: #121824 !important; }
+body.light-theme .ticker-name    { color: #4a5568 !important; }
+body.light-theme .ticker-tile strong { color: #0078cc !important; }
+body.light-theme .ticker-up,
+body.light-theme .ticker-flat    { color: #00a870 !important; }
+body.light-theme .market-kpi span   { color: #4a5568 !important; }
+body.light-theme .market-kpi strong { color: #121824 !important; }
+body.light-theme .market-kpi.danger strong { color: var(--p) !important; }
+body.light-theme .market-kpi small  { color: #6c7a89 !important; }
+body.light-theme .source-card strong { color: #121824 !important; }
+body.light-theme .source-card span  { color: #4a5568 !important; }
+body.light-theme .source-card small { color: #6c7a89 !important; }
+body.light-theme .market-row strong { color: #121824 !important; }
+body.light-theme .market-row span   { color: #4a5568 !important; }
+body.light-theme .market-row-prices strong { color: #0078cc !important; }
+body.light-theme .market-row-prices em     { color: #00a870 !important; }
+body.light-theme .panel-meta  { color: #6c7a89 !important; }
+body.light-theme .card-title  { color: #0078cc !important; }
+body.light-theme .card-hd     { background: rgba(24, 168, 255, 0.03); }
+body.light-theme .empty-title { color: #121824 !important; }
+body.light-theme .empty-copy  { color: #4a5568 !important; }
+
+/* ── NEWS TAB LIGHT MODE ── */
+body.light-theme .news-terminal h3  { color: #121824 !important; }
+body.light-theme .news-terminal p   { color: #2c3e50 !important; }
+body.light-theme .news-terminal span { color: inherit; }
+
+/* ── PORTFOLIO TAB LIGHT MODE ── */
+body.light-theme .market-hero h2 { color: #121824 !important; }
+
+/* ── CHART LABELS IN LIGHT MODE — canvas text is set in JS ── */
+/* Force chart wrapper backgrounds to white in light mode */
+body.light-theme .chart-wrap canvas {
+  background: transparent;
+}
+
+/* ── GENERAL LIGHT MODE STAT CARDS ── */
+body.light-theme .slbl { color: #4a5568 !important; }
+body.light-theme .ssub { color: #6c7a89 !important; }
+
+/* ── DRAWER SECTION TITLE IN LIGHT MODE ── */
+body.light-theme .drawer-section-title { color: #4a5568 !important; }
+body.light-theme .drawer label { color: #2c3e50 !important; }
+
+/* ── TOAST IN LIGHT MODE ── */
+body.light-theme .toast  { background: #ffffff; color: #121824; }
+
+/* ── INSIGHT TEXT FIX ── */
+body.light-theme .insight { color: #2c3e50 !important; }
+body.light-theme .insight-lbl.danger { color: var(--p) !important; }
+body.light-theme .insight-lbl.warn   { color: var(--a) !important; }
+body.light-theme .insight-lbl.gn     { color: var(--g) !important; }
+body.light-theme .insight-lbl.GN     { color: var(--g) !important; }
+
+/* ── CODE BLOCK IN LIGHT MODE ── */
+body.light-theme .code-block { background: #f8f9fa; color: #2c3e50; }
+body.light-theme .co-g { color: #00a870 !important; }
+body.light-theme .co-b { color: #0078cc !important; }
+body.light-theme .co-a { color: #b86a00 !important; }
+body.light-theme .co-p { color: #7c3aed !important; }
+body.light-theme .co-r { color: var(--p) !important; }
+body.light-theme .co-c { color: #007a70 !important; }
+
+/* ── FOOTER LIGHT MODE ── */
+body.light-theme footer,
+body.light-theme footer span,
+body.light-theme footer div { color: #6c7a89 !important; }
+
+/* ── DOWNLOAD CSV BUTTON ── */
+.dl-btn-dashboard {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: rgba(0, 214, 143, 0.07);
+  border: 1px solid rgba(0, 214, 143, 0.24);
+  color: var(--g);
+  font-family: var(--fs);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.dl-btn-dashboard:hover {
+  background: rgba(0, 214, 143, 0.14);
+  box-shadow: 0 0 12px rgba(0, 214, 143, 0.18);
+}
+
+/* ── APPLY BUTTON REDIRECT INDICATOR ── */
+.btn-pri:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* ── SCROLLABLE DRAWER BODY ── */
+.drawer-body {
+  overflow-y: auto;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+  -webkit-overflow-scrolling: touch;
 }
