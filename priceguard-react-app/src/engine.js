@@ -214,6 +214,21 @@ export function dlCSV(data, filename) {
     if (typeof v === 'string' && v.includes(',')) return `"${v}"`;
     return v ?? '';
   }).join(','));
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([[cols.join(','), ...rows].join('\n')], { type: 'text/csv' })), download: filename });
+
+  const blob = new Blob([[cols.join(','), ...rows].join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+
+  // Open CSV in a new tab when possible (some browsers will still download).
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
   a.click();
+  setTimeout(() => {
+    try { URL.revokeObjectURL(url); } catch (e) { /* ignore */ }
+    try { a.remove(); } catch (e) { /* ignore */ }
+  }, 1000);
 }
+

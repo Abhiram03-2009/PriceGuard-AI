@@ -572,6 +572,11 @@ body.light-theme body::before {
     linear-gradient(rgba(24, 168, 255, 0.015) 1px, transparent 1px),
     linear-gradient(90deg, rgba(24, 168, 255, 0.015) 1px, transparent 1px);
 }
+/* Improve form/control contrast in light mode for accessibility */
+body.light-theme .fi { color: var(--t2) !important; background: var(--bg2) !important; border-color: rgba(0,0,0,0.06) !important; }
+body.light-theme .fi::placeholder { color: #94a3b8 !important; }
+body.light-theme .btn, body.light-theme .btn-ghost { color: var(--t1) !important; }
+body.light-theme .btn-pri { background: linear-gradient(135deg, rgba(10, 80, 200, 0.12), rgba(24, 168, 255, 0.08)); color: var(--b) !important; border-color: var(--b1) !important; }
 body.light-theme .card-hd {
   background: rgba(24, 168, 255, 0.03);
 }

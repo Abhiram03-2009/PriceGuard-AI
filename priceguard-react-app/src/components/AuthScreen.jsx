@@ -9,9 +9,19 @@ function simulateOAuthPopup(provider) {
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top  = window.screenY + (window.outerHeight - height) / 2;
 
+    // If real client IDs are provided at build time (REACT_APP_GOOGLE_CLIENT_ID, REACT_APP_APPLE_CLIENT_ID)
+    // prefer them; otherwise fall back to the demo/mock URLs. Real production OAuth requires
+    // redirect URIs and a backend to securely exchange codes/tokens.
+    const googleClient = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_GOOGLE_CLIENT_ID) || (typeof window !== 'undefined' && window.__GOOGLE_CLIENT_ID__);
+    const appleClient = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_APPLE_CLIENT_ID) || (typeof window !== 'undefined' && window.__APPLE_CLIENT_ID__);
+
     const providerUrls = {
-      google: `https://accounts.google.com/o/oauth2/auth?response_type=token&client_id=demo&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=email%20profile`,
-      apple:  `https://appleid.apple.com/auth/authorize?response_type=code&client_id=com.priceguard.ai&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=name%20email`,
+      google: googleClient
+        ? `https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=${encodeURIComponent(googleClient)}&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth2callback')}&scope=email%20profile&prompt=select_account`
+        : `https://accounts.google.com/o/oauth2/auth?response_type=token&client_id=demo&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=email%20profile`,
+      apple: appleClient
+        ? `https://appleid.apple.com/auth/authorize?response_type=code&client_id=${encodeURIComponent(appleClient)}&redirect_uri=${encodeURIComponent(window.location.origin + '/apple_callback')}&scope=name%20email&response_mode=form_post`
+        : `https://appleid.apple.com/auth/authorize?response_type=code&client_id=com.priceguard.ai&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=name%20email`,
     };
 
     const popup = window.open(

@@ -6,7 +6,7 @@ import PortfolioTab from './components/PortfolioTab';
 import AuthScreen from './components/AuthScreen';
 import { ForecastChart, ScatterLinChart, HBar, VBar } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
-import { generateAdvisorReply, buildAuditSummary } from './advisor';
+import { generateAdvisorReplyAsync, generateAdvisorReply, buildAuditSummary } from './advisor';
 import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/Navbar';
 import BottomTabs from './components/BottomTabs';
@@ -190,27 +190,45 @@ export default function App() {
   const pageData = tableData.slice((page - 1) * PER, page * PER);
   const doSort = col => { if (sortCol === col) setDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSort(col); setDir('desc'); } };
 
-  const sendQuery = (msgText) => {
+  const sendQuery = async (msgText) => {
     if (!msgText.trim() || chatTyping) return;
     setChatMsgs(prev => [...prev, { role: 'user', text: msgText }]);
     setChatTyping(true);
 
     const delay = 400 + Math.min(msgText.length * 8, 600);
-    setTimeout(() => {
-      const { text, intent } = generateAdvisorReply(msgText, {
-        results,
-        rfTrees,
-        gbRounds,
-        gbLearningRate,
-        dynThresholdMin,
-        dynThresholdPercent,
-        lastIntent: lastAiIntent.current,
-      });
-      if (intent) lastAiIntent.current = intent;
-      setChatMsgs(prev => [...prev, { role: 'ai', text }]);
-      setChatTyping(false);
-    }, delay);
-  };
+      setTimeout(async () => {
+        try {
+          const reply = await generateAdvisorReplyAsync(msgText, {
+            results,
+            rfTrees,
+            gbRounds,
+            gbLearningRate,
+            dynThresholdMin,
+            dynThresholdPercent,
+            lastIntent: lastAiIntent.current,
+          });
+          const text = typeof reply === 'string' ? reply : (reply?.text || 'Sorry, no response.');
+          const intent = reply?.intent || null;
+          if (intent) lastAiIntent.current = intent;
+          setChatMsgs(prev => [...prev, { role: 'ai', text }]);
+        } catch (e) {
+          // fallback: local advisor
+          const { text, intent } = generateAdvisorReply(msgText, {
+            results,
+            rfTrees,
+            gbRounds,
+            gbLearningRate,
+            dynThresholdMin,
+            dynThresholdPercent,
+            lastIntent: lastAiIntent.current,
+          });
+          if (intent) lastAiIntent.current = intent;
+          setChatMsgs(prev => [...prev, { role: 'ai', text }]);
+        } finally {
+          setChatTyping(false);
+        }
+      }, delay);
+    };
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -830,8 +848,16 @@ export default function App() {
                   onClick={() => {
                     const cols = Object.keys(previewData.rows[0] || {});
                     const rawRows = previewData.rows.map(r => cols.map(c => typeof r[c] === 'string' && r[c].includes(',') ? `"${r[c]}"` : (r[c] ?? '')).join(','));
-                    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([[cols.join(','), ...rawRows].join('\n')], { type: 'text/csv' })), download: previewData.name });
+                    const blob = new Blob([[cols.join(','), ...rawRows].join('\n')], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = previewData.name;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    document.body.appendChild(a);
                     a.click();
+                    setTimeout(() => { try { URL.revokeObjectURL(url); } catch(e){} try { a.remove(); } catch(e){} }, 1000);
                     setPreviewData(null);
                   }} 
                   style={{ flex: 1 }}
