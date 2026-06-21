@@ -37,6 +37,9 @@ export default function App() {
   const [previewData, setPreviewData] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drag, setDrag] = useState(false);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileDraft, setProfileDraft] = useState(null);
   const fileRef = useRef(null);
 
   // ML Tuning parameters (Hamburger Drawer)
@@ -74,9 +77,14 @@ export default function App() {
     }
   }, [chatMsgs, chatTyping, tab]);
 
+  const logActivity = (action) => {
+    setRecentActivity(prev => [{ ts: new Date().toLocaleTimeString(), action }, ...prev].slice(0, 6));
+  };
+
   const add = (msg, type = 'success') => {
     const id = Date.now();
     setToasts(t => [...t, { id, msg, type }]);
+    logActivity(msg);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000);
   };
 
@@ -84,6 +92,26 @@ export default function App() {
     setRawData(data);
     setResults(null); // Clear previous results to prompt fresh scan
     add(`Ingested ${data.length} records successfully!`);
+  };
+
+  const startEditProfile = () => {
+    if (!user) return;
+    setProfileDraft({ name: user.name || '', email: user.email || '' });
+    setEditingProfile(true);
+  };
+
+  const saveProfileChanges = () => {
+    if (!profileDraft?.name?.trim()) {
+      add('Profile name cannot be blank.', 'error');
+      return;
+    }
+    setUser(prev => ({ ...prev, ...profileDraft }));
+    setEditingProfile(false);
+    add('Profile updated successfully.');
+  };
+
+  const cancelProfileEdit = () => {
+    setEditingProfile(false);
   };
 
   const parseFile = (file) => {
@@ -276,7 +304,7 @@ export default function App() {
   }
 
   if (!authed) {
-    return <AuthScreen onAuth={(userData) => { setUser(userData); setAuthed(true); }} />;
+    return <AuthScreen onAuth={(userData) => { setUser(userData); setAuthed(true); add(`Signed in as ${userData.name || userData.email || 'user'}`); }} />;
   }
 
   // Define metric values for the dashboard
@@ -329,14 +357,46 @@ export default function App() {
                 }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
-                <div style={{ fontFamily: 'var(--fm)', fontSize: '9.5px', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--b)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {user.provider === 'google' ? '● Google Account' : user.provider === 'apple' ? '● Apple ID' : '● Email Account'}
-                </div>
+                {!editingProfile ? (
+                  <>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                    <div style={{ fontFamily: 'var(--fm)', fontSize: '9.5px', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                    <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--b)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {user.provider === 'google' ? '● Google Account' : user.provider === 'apple' ? '● Apple ID' : '● Email Account'}
+                    </div>
+                    <button className="btn btn-ghost btn-sm" style={{ marginTop: '10px', padding: '6px 8px', fontSize: '10px' }} onClick={startEditProfile}>
+                      ✎ Edit Profile
+                    </button>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                    <input type="text" value={profileDraft?.name || ''} onChange={e => setProfileDraft(prev => ({ ...prev, name: e.target.value }))} className="fi auth-input" placeholder="Your display name" />
+                    <input type="email" value={profileDraft?.email || ''} onChange={e => setProfileDraft(prev => ({ ...prev, email: e.target.value }))} className="fi auth-input" placeholder="Email address" />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn btn-pri btn-sm" style={{ flex: 1 }} onClick={saveProfileChanges}>Save</button>
+                      <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={cancelProfileEdit}>Cancel</button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
+
+          <div style={{ margin: '14px 0 0' }}>
+            <div className="drawer-section-title">Recent Activity</div>
+            <div style={{ fontSize: '10px', color: 'var(--t3)', minHeight: '90px' }}>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((entry, index) => (
+                  <div key={index} style={{ marginBottom: '8px', lineHeight: 1.4 }}>
+                    <span style={{ fontFamily: 'var(--fm)', color: 'var(--b)', fontSize: '9px' }}>{entry.ts}</span>
+                    <div style={{ color: 'var(--t2)', fontSize: '10px' }}>{entry.action}</div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ opacity: 0.75 }}>No activity yet. Run an audit, export a report, or customize settings to begin.</div>
+              )}
+            </div>
+          </div>
 
           {/* ── AI ANALYSIS CONTROLS ── */}
           <div>

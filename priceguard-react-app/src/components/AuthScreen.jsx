@@ -1,27 +1,30 @@
 import React, { useState, useRef } from 'react';
 import logo from '../logo.png';
 
-// ── Simulates OAuth popup flow (real OAuth requires a backend/Firebase config)
-// This gives the authentic popup UX — in production replace with real provider SDK calls.
+// ── Simulates OAuth popup flow. With REACT_APP_AUTH_PROXY_URL configured,
+// this opens the backend proxy route and listens for a secure postMessage.
+// When no backend proxy is available, it falls back to the demo-style mock flow.
 function simulateOAuthPopup(provider) {
   return new Promise((resolve, reject) => {
     const width = 500, height = 600;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top  = window.screenY + (window.outerHeight - height) / 2;
 
-    // If real client IDs are provided at build time (REACT_APP_GOOGLE_CLIENT_ID, REACT_APP_APPLE_CLIENT_ID)
-    // prefer them; otherwise fall back to the demo/mock URLs. Real production OAuth requires
-    // redirect URIs and a backend to securely exchange codes/tokens.
+    const authProxyUrl = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_AUTH_PROXY_URL) || (typeof window !== 'undefined' && window.__AUTH_PROXY_URL__);
     const googleClient = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_GOOGLE_CLIENT_ID) || (typeof window !== 'undefined' && window.__GOOGLE_CLIENT_ID__);
     const appleClient = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_APPLE_CLIENT_ID) || (typeof window !== 'undefined' && window.__APPLE_CLIENT_ID__);
 
     const providerUrls = {
-      google: googleClient
-        ? `https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=${encodeURIComponent(googleClient)}&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth2callback')}&scope=email%20profile&prompt=select_account`
-        : `https://accounts.google.com/o/oauth2/auth?response_type=token&client_id=demo&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=email%20profile`,
-      apple: appleClient
-        ? `https://appleid.apple.com/auth/authorize?response_type=code&client_id=${encodeURIComponent(appleClient)}&redirect_uri=${encodeURIComponent(window.location.origin + '/apple_callback')}&scope=name%20email&response_mode=form_post`
-        : `https://appleid.apple.com/auth/authorize?response_type=code&client_id=com.priceguard.ai&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=name%20email`,
+      google: authProxyUrl
+        ? `${authProxyUrl.replace(/\/$/, '')}/auth/google`
+        : googleClient
+          ? `https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=${encodeURIComponent(googleClient)}&redirect_uri=${encodeURIComponent(window.location.origin + '/oauth2callback')}&scope=email%20profile&prompt=select_account`
+          : `https://accounts.google.com/o/oauth2/auth?response_type=token&client_id=demo&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=email%20profile`,
+      apple: authProxyUrl
+        ? `${authProxyUrl.replace(/\/$/, '')}/auth/apple`
+        : appleClient
+          ? `https://appleid.apple.com/auth/authorize?response_type=code&client_id=${encodeURIComponent(appleClient)}&redirect_uri=${encodeURIComponent(window.location.origin + '/apple_callback')}&scope=name%20email&response_mode=form_post`
+          : `https://appleid.apple.com/auth/authorize?response_type=code&client_id=com.priceguard.ai&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=name%20email`,
     };
 
     const popup = window.open(
@@ -30,30 +33,39 @@ function simulateOAuthPopup(provider) {
       `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
     );
 
-    // In a Capacitor / production build this would go through the native SDK.
-    // For the web demo we detect popup close and treat as cancelled, or auto-resolve
-    // after a realistic delay (simulating sign-in completion).
     if (!popup || popup.closed) {
-      // Pop-up blocked — fall back to mock sign-in
       setTimeout(() => resolve(buildMockProfile(provider)), 1200);
       return;
     }
 
     let resolved = false;
-    // Auto-resolve after 2.5s — mimics user completing the provider form
-    const autoResolve = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        try { popup.close(); } catch (e) { /* ignore */ }
-        resolve(buildMockProfile(provider));
-      }
-    }, 2500);
+    let targetOrigin = window.location.origin;
+    if (authProxyUrl) {
+      try { targetOrigin = new URL(authProxyUrl).origin; } catch (e) { targetOrigin = '*'; }
+    }
+
+    const cleanup = () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+      window.removeEventListener('message', onMessage);
+    };
+
+    const onMessage = (event) => {
+      if (!event.data || event.data.type !== 'PRICEGUARD_AUTH' || event.data.provider !== provider) return;
+      if (targetOrigin !== '*' && event.origin !== targetOrigin) return;
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      try { popup.close(); } catch (e) { /* ignore */ }
+      resolve({ ...event.data.profile, provider });
+    };
+
+    window.addEventListener('message', onMessage);
 
     const interval = setInterval(() => {
       try {
         if (popup.closed) {
-          clearInterval(interval);
-          clearTimeout(autoResolve);
+          cleanup();
           if (!resolved) {
             resolved = true;
             reject(new Error('Popup closed by user'));
@@ -61,6 +73,17 @@ function simulateOAuthPopup(provider) {
         }
       } catch (e) { /* cross-origin access — ignore */ }
     }, 400);
+
+    const timeout = setTimeout(() => {
+      if (resolved) return;
+      cleanup();
+      if (authProxyUrl) {
+        reject(new Error('Sign-in timed out. Please try again.'));
+      } else {
+        try { popup.close(); } catch (e) { /* ignore */ }
+        resolve(buildMockProfile(provider));
+      }
+    }, authProxyUrl ? 20000 : 2500);
   });
 }
 
