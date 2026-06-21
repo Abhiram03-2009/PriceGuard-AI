@@ -1,3 +1,5 @@
 # Sensitive files
 ios_certs/
 Apple API Key/
+backend/database.sqlite
+backend/.env

@@ -31,6 +31,17 @@ If you are setting this project up on a new computer, you can clone the code dir
    ```
 5. **Analyze**: The app will automatically open at `http://localhost:3000`. Go to the Dashboard, upload a dataset, and click **Run AI Analysis**.
 
+## Environment Variables
+
+For App Store / build-time configuration, set GitHub Actions secrets under Settings → Secrets → Actions. The iOS workflow now injects these values during the `npm run build` step:
+
+- `REACT_APP_GOOGLE_CLIENT_ID`
+- `REACT_APP_APPLE_CLIENT_ID`
+- `REACT_APP_OPENAI_API_KEY` (optional, for cloud LLM support)
+- `REACT_APP_AUTH_PROXY_URL` (optional, points to a secure backend proxy URL)
+
+For a local backend server, copy `backend/.env.example` to `backend/.env` and provide the real OAuth and OpenAI secrets there.
+
 ## Features
 
 - **Dual-Layer ML Engine**: Random Forest Regressor + Gradient Boosting Machine ensemble

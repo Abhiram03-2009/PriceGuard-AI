@@ -355,23 +355,33 @@ export function generateAdvisorReply(msgText, ctx) {
 }
 
 export async function generateAdvisorReplyAsync(msgText, ctx) {
-  // Optional LLM-backed reply: when REACT_APP_OPENAI_API_KEY is provided at build time
-  // the client will attempt a direct call to OpenAI. This is gated — if no key is present
-  // the function falls back to the on-device advisor. NOTE: embedding API keys in
-  // client builds is not recommended for production; prefer a backend proxy with
-  // secrets stored in CI/GH Actions.
+  // Optional LLM-backed reply via a secure backend proxy or in-browser OpenAI key.
   try {
+    const authProxyUrl = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_AUTH_PROXY_URL) || (typeof window !== 'undefined' && window.__AUTH_PROXY_URL__);
     const key = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_OPENAI_API_KEY) || (typeof window !== 'undefined' && window.__OPENAI_API_KEY__);
-    if (!key) return generateAdvisorReply(msgText, ctx);
 
     const system = `You are PriceGuard AI — a concise assistant specialized in ticket pricing, arbitrage detection, and audit analytics. When data context is provided, reference concrete numbers briefly. Keep answers short (<= 250 words).`;
-
     const messages = [
       { role: 'system', content: system },
       { role: 'user', content: `Context: ${JSON.stringify({ totalEvents: ctx?.results?.totalEvents, arbRate: ctx?.results?.arbRate, topCities: ctx?.results?.topCities?.slice(0,3) || [] })}` },
       { role: 'user', content: msgText }
     ];
 
+    if (authProxyUrl) {
+      const resp = await fetch(`${authProxyUrl.replace(/\/$/, '')}/api/openai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400 })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const text = data?.choices?.[0]?.message?.content;
+        if (text) return { text, intent: null, confidence: 0.9 };
+      }
+      throw new Error(`Backend LLM proxy failed ${resp.status}`);
+    }
+
+    if (!key) return generateAdvisorReply(msgText, ctx);
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
