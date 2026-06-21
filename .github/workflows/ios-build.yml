@@ -28,6 +28,11 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build Web App
+        env:
+          REACT_APP_OPENAI_API_KEY: ${{ secrets.REACT_APP_OPENAI_API_KEY }}
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+          REACT_APP_APPLE_CLIENT_ID: ${{ secrets.REACT_APP_APPLE_CLIENT_ID }}
+          REACT_APP_AUTH_PROXY_URL: ${{ secrets.REACT_APP_AUTH_PROXY_URL }}
         run: npm run build
 
       - name: Sync Capacitor (iOS)
