@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - agents/app-store-final-polish-and-testing
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
