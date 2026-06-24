@@ -19,7 +19,7 @@ export default function Navbar({ onMenuClick, theme, toggleTheme, dataMode }) {
         <img src={logo} alt="PriceGuard AI Logo" className="ios-header-logo" />
         <div className="ios-header-title wordmark nav-wordmark">
           <span className="nav-wm-price">Price</span><span className="nav-wm-guard">Guard</span>
-          <span className="nav-wm-ai">AI</span>
+          <span className="nav-wm-ai">&nbsp;AI</span>
         </div>
       </div>
 

@@ -1,21 +1,19 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import MarketTab from './components/MarketTab';
 import FetchTab from './components/FetchTab';
 import NewsTab from './components/NewsTab';
 import PortfolioTab from './components/PortfolioTab';
 import AuthScreen from './components/AuthScreen';
-import { ForecastChart, ScatterLinChart, HBar, VBar } from './components/Charts';
+import DashboardAnalytics from './components/DashboardAnalytics';
+import { ScatterLinChart } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
 import { generateAdvisorReply, buildAuditSummary } from './advisor';
+import { askLLM } from './llmService';
+import { loadSession, clearSession, updateProfile, getActivity, logActivity } from './authService';
 import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/Navbar';
 import BottomTabs from './components/BottomTabs';
 import './index.css';
-
-const SI = ({ col, sortCol, sortDir }) => {
-  if (sortCol !== col) return null;
-  return <span style={{ marginLeft: 5, fontSize: 8 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
-};
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -34,10 +32,21 @@ export default function App() {
   const [sortDir, setDir] = useState('desc');
   const [page, setPage] = useState(1);
   const [toasts, setToasts] = useState([]);
-  const [previewData, setPreviewData] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [analyticsExpanded, setAnalyticsExpanded] = useState(true);
+  const [profileEditing, setProfileEditing] = useState(false);
+  const [editName, setEditName] = useState('');
   const [drag, setDrag] = useState(false);
   const fileRef = useRef(null);
+  const dashboardRef = useRef(null);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (session) {
+      setUser(session);
+      setAuthed(true);
+    }
+  }, []);
 
   // ML Tuning parameters (Hamburger Drawer)
   const [rfTrees, setRfTrees] = useState(40);
@@ -82,7 +91,8 @@ export default function App() {
 
   const onFetchedData = (data) => {
     setRawData(data);
-    setResults(null); // Clear previous results to prompt fresh scan
+    setResults(null);
+    if (user?.id) logActivity(user.id, 'Data loaded', `${data.length} records`);
     add(`Ingested ${data.length} records successfully!`);
   };
 
@@ -129,6 +139,8 @@ export default function App() {
       const res = runAnalysis(rawData, config);
       setResults(res);
       setAnalyzing(false);
+      setAnalyticsExpanded(true);
+      if (user?.id) logActivity(user.id, 'AI Audit completed', `${res.arbEvents.length} flagged / ${res.totalEvents} events`);
       add('Audit Complete: Yield optimization metrics generated.');
       
       setTimeout(() => {
@@ -190,27 +202,29 @@ export default function App() {
   const pageData = tableData.slice((page - 1) * PER, page * PER);
   const doSort = col => { if (sortCol === col) setDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSort(col); setDir('desc'); } };
 
-  const sendQuery = (msgText) => {
+  const sendQuery = useCallback(async (msgText) => {
     if (!msgText.trim() || chatTyping) return;
     setChatMsgs(prev => [...prev, { role: 'user', text: msgText }]);
     setChatTyping(true);
 
-    const delay = 400 + Math.min(msgText.length * 8, 600);
-    setTimeout(() => {
-      const { text, intent } = generateAdvisorReply(msgText, {
-        results,
-        rfTrees,
-        gbRounds,
-        gbLearningRate,
-        dynThresholdMin,
-        dynThresholdPercent,
-        lastIntent: lastAiIntent.current,
-      });
-      if (intent) lastAiIntent.current = intent;
-      setChatMsgs(prev => [...prev, { role: 'ai', text }]);
-      setChatTyping(false);
-    }, delay);
-  };
+    const ctx = { results, rfTrees, gbRounds, gbLearningRate, dynThresholdMin, dynThresholdPercent, lastIntent: lastAiIntent.current };
+    let reply = null;
+
+    try {
+      const llm = await askLLM(msgText, ctx, chatMsgs);
+      if (llm?.text) reply = llm.text;
+    } catch { /* local fallback */ }
+
+    if (!reply) {
+      const local = generateAdvisorReply(msgText, { ...ctx, lastIntent: lastAiIntent.current });
+      if (local.intent) lastAiIntent.current = local.intent;
+      reply = local.text;
+    }
+
+    setChatMsgs(prev => [...prev, { role: 'ai', text: reply }]);
+    setChatTyping(false);
+    if (user?.id) logActivity(user.id, 'Advisor query', msgText.slice(0, 40));
+  }, [chatTyping, results, rfTrees, gbRounds, gbLearningRate, dynThresholdMin, dynThresholdPercent, chatMsgs, user]);
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -260,6 +274,23 @@ export default function App() {
   if (!authed) {
     return <AuthScreen onAuth={(userData) => { setUser(userData); setAuthed(true); }} />;
   }
+
+  const activity = user?.id ? getActivity(user.id) : [];
+
+  const saveProfile = () => {
+    if (!user?.id || !editName.trim()) return;
+    const updated = updateProfile(user.id, { name: editName.trim() });
+    setUser(updated);
+    setProfileEditing(false);
+    add('Profile updated.');
+  };
+
+  const scrollToAnalytics = () => {
+    setDrawerOpen(false);
+    setTab('dashboard');
+    setAnalyticsExpanded(true);
+    setTimeout(() => dashboardRef.current?.scrollIntoView({ behavior: 'smooth' }), 200);
+  };
 
   // Define metric values for the dashboard
   const stats = results ? (dataMode === 'enterprise' ? [
@@ -311,11 +342,33 @@ export default function App() {
                 }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                {profileEditing ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input className="fi" value={editName} onChange={e => setEditName(e.target.value)} style={{ flex: 1, fontSize: '11px', padding: '4px 8px' }} />
+                    <button type="button" className="btn btn-pri btn-sm" onClick={saveProfile} style={{ padding: '2px 8px', fontSize: '10px' }}>Save</button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                )}
                 <div style={{ fontFamily: 'var(--fm)', fontSize: '9.5px', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--b)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {user.provider === 'google' ? '● Google Account' : user.provider === 'apple' ? '● Apple ID' : '● Email Account'}
-                </div>
+                <button type="button" className="profile-edit-link" onClick={() => { setEditName(user.name); setProfileEditing(p => !p); }}>
+                  {profileEditing ? 'Cancel' : 'Edit Profile'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activity.length > 0 && (
+            <div>
+              <div className="drawer-section-title">Recent Activity</div>
+              <div className="activity-feed">
+                {activity.slice(0, 5).map(a => (
+                  <div key={a.id} className="activity-item">
+                    <div className="activity-action">{a.action}</div>
+                    <div className="activity-detail">{a.detail}</div>
+                    <div className="activity-ts">{new Date(a.ts).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -428,26 +481,29 @@ export default function App() {
               ⚡ Apply &amp; Run Analysis
             </button>
             <button
+              type="button"
               className="btn btn-ghost"
               style={{ width: '100%', padding: '9px 0', fontSize: '11px' }}
-              onClick={() => { setDrawerOpen(false); setTab('more'); }}
+              onClick={scrollToAnalytics}
               disabled={!results}
             >
-              📊 Full Analytics &amp; Audit Log
+              📊 Full Analytics on Dashboard
             </button>
             {results && (
               <button
+                type="button"
                 className="btn btn-ghost"
                 style={{ width: '100%', padding: '9px 0', fontSize: '11px', color: 'var(--g)', borderColor: 'rgba(0,214,143,0.25)' }}
-                onClick={() => { setDrawerOpen(false); dlCSV(results.processed, 'priceguard_corrected_prices.csv'); }}
+                onClick={() => { setDrawerOpen(false); dlCSV(results.processed, 'priceguard_corrected_prices.csv'); if (user?.id) logActivity(user.id, 'CSV exported', 'corrected prices'); }}
               >
                 ↓ Download Corrected Prices CSV
               </button>
             )}
             <button
+              type="button"
               className="btn btn-ghost"
               style={{ width: '100%', padding: '9px 0', fontSize: '11px', borderColor: 'rgba(255,54,104,0.25)', color: 'var(--p)', marginTop: '4px' }}
-              onClick={() => { setDrawerOpen(false); setAuthed(false); setUser(null); setRawData(null); setResults(null); }}
+              onClick={() => { setDrawerOpen(false); clearSession(); setAuthed(false); setUser(null); setRawData(null); setResults(null); }}
             >
               Sign Out
             </button>
@@ -463,7 +519,7 @@ export default function App() {
           <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Mode Switcher */}
             <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
-              <div className="ios-card" style={{ padding: '3px', borderRadius: '8px', display: 'flex', background: 'rgba(0,0,0,0.1)', border: '1px solid var(--b1)' }}>
+              <div className="ios-card mode-switcher-card" style={{ padding: '3px', borderRadius: '8px', display: 'flex', background: 'rgba(0,0,0,0.1)', border: '1px solid var(--b1)' }}>
                 <button className={`nav-tab ${dataMode === 'public' ? 'act' : ''}`} onClick={() => setDataMode('public')} style={{ fontSize: '10px', padding: '4px 12px', border: 'none' }}>PUBLIC MODE</button>
                 <button className={`nav-tab ${dataMode === 'enterprise' ? 'act' : ''} secure`} onClick={() => setDataMode('enterprise')} style={{ fontSize: '10px', padding: '4px 12px', border: 'none' }}>ENTERPRISE</button>
               </div>
@@ -600,15 +656,32 @@ export default function App() {
             {/* Regression Chart & Briefing */}
             {results && (
               <>
-                <div className="ios-card">
-                  <div className="card-hd" style={{ padding: '8px 12px' }}><div className="card-title" style={{ fontSize: '11px' }}>Arbitrage Forecast</div></div>
-                  <div className="card-body" style={{ padding: '10px' }}>
-                    <ForecastChart series={results.forecastSeries} />
-                  </div>
+                <div ref={dashboardRef}>
+                  <DashboardAnalytics
+                    results={results}
+                    rfTrees={rfTrees}
+                    gbRounds={gbRounds}
+                    gbLearningRate={gbLearningRate}
+                    dynThresholdMin={dynThresholdMin}
+                    dynThresholdPercent={dynThresholdPercent}
+                    search={search}
+                    setSearch={setSearch}
+                    filterTier={filterTier}
+                    setFilter={setFilter}
+                    sortCol={sortCol}
+                    sortDir={sortDir}
+                    doSort={doSort}
+                    page={page}
+                    setPage={setPage}
+                    tableData={tableData}
+                    pageData={pageData}
+                    expanded={analyticsExpanded}
+                    onToggle={() => setAnalyticsExpanded(e => !e)}
+                  />
                 </div>
 
                 <div className="ios-card">
-                  <div className="card-hd" style={{ padding: '8px 12px' }}><div className="card-title" style={{ fontSize: '11px' }}>Regression Trends</div></div>
+                  <div className="card-hd" style={{ padding: '8px 12px' }}><div className="card-title" style={{ fontSize: '11px' }}>Price vs Popularity Snapshot</div></div>
                   <div className="card-body" style={{ padding: '10px' }}>
                     <ScatterLinChart popVals={results.popVals} priceVals={results.priceVals} linModel={results.linModel} processed={results.processed} />
                   </div>
@@ -620,7 +693,7 @@ export default function App() {
 
         {/* ────────────── TAB: FETCH LIVE DATA ────────────── */}
         {tab === 'fetch' && (
-          <FetchTab onDataLoaded={onFetchedData} add={add} setPreviewData={setPreviewData} setTab={setTab} />
+          <FetchTab onDataLoaded={onFetchedData} add={add} setTab={setTab} />
         )}
 
         {/* ────────────── TAB: MARKETS ────────────── */}
@@ -659,7 +732,7 @@ export default function App() {
               )}
 
               {/* Chat Thread */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px', background: 'rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="chat-thread-bg" style={{ flex: 1, overflowY: 'auto', padding: '12px', background: 'rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {chatMsgs.map((m, i) => (
                   <div key={i} className={`chat-bubble-row ${m.role === 'ai' ? 'ai' : 'user'}`}>
                     <div className="chat-avatar">
@@ -722,87 +795,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ────────────── TAB: MORE (ANALYTICS & LOGS) — accessible from Dashboard ────────────── */}
-        {tab === 'more' && (
-          results ? (
-            <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Feature Importance & Leakage Distribution Charts */}
-              <div className="ios-card">
-                <div className="card-hd" style={{ padding: '8px 12px' }}><div className="card-title" style={{ fontSize: '11px' }}>Feature Importance weight</div></div>
-                <div className="card-body" style={{ padding: '10px' }}>
-                  <HBar labels={results.importances.map(i => i.feature)} data={results.importances.map(i => +(i.importance * 100).toFixed(1))} colors={results.importances.map((_, i) => `hsla(200,80%,55%,${0.2 + (i * 0.1)})`)} height={160} />
-                </div>
-              </div>
-
-              <div className="ios-card">
-                <div className="card-hd" style={{ padding: '8px 12px' }}><div className="card-title" style={{ fontSize: '11px' }}>Leakage Distribution</div></div>
-                <div className="card-body" style={{ padding: '10px' }}>
-                  <VBar labels={results.margDist.map(b => b.label)} data={results.margDist.map(b => b.count)} color="rgba(255, 54, 104, 0.25)" bc="var(--p)" height={160} />
-                </div>
-              </div>
-
-              {/* Model Architecture Info */}
-              <div className="ios-card">
-                <div className="card-hd" style={{ padding: '8px 12px' }}><div className="card-title" style={{ fontSize: '11px' }}>Ensemble Core Weights</div></div>
-                <div className="card-body" style={{ padding: '10px' }}>
-                  <div className="code-block" style={{ fontSize: '10px', padding: '10px', lineHeight: '1.7' }}>
-                    <span className="co-g">{"// Rebranded DECA Audit Core: Arbitrage Intelligence"}</span><br />
-                    <span className="co-b">Random Forest Regressor</span> (Trees: {rfTrees}, Ensemble Weight: 58%)<br />
-                    <span className="co-p">Gradient Boosting Machine</span> (Rounds: {gbRounds}, Ensemble Weight: 42%, LR: {gbLearningRate})<br />
-                    <span className="co-a">Tolerance Bounds</span> Minimum Margin: ${dynThresholdMin} | Ratio: {(dynThresholdPercent * 100).toFixed(0)}%
-                  </div>
-                </div>
-              </div>
-
-              {/* Audit Log Table */}
-              <div className="ios-card">
-                <div className="card-hd" style={{ padding: '8px 12px' }}>
-                  <div className="card-title" style={{ fontSize: '11px' }}>Full Audit Log</div>
-                  <button className="dl-btn" style={{ padding: '3px 8px', fontSize: '10px' }} onClick={() => dlCSV(results.processed, 'arbitrage_intelligence_audit.csv')}>Download CSV</button>
-                </div>
-                <div style={{ padding: '6px 12px', borderBottom: '1px solid var(--b1)' }}>
-                  <div className="filter-bar" style={{ gap: '6px' }}>
-                    <input className="fi" placeholder="Search event..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ flex: 1, fontSize: '11px', padding: '4px 8px' }} />
-                    <select className="fi" value={filterTier} onChange={e => { setFilter(e.target.value); setPage(1); }} style={{ fontSize: '11px', padding: '4px 8px' }}>
-                      <option value="ALL">All Items</option>
-                      <option value="ARB">Flagged Only</option>
-                      <option value="HIGH">High Risk</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="tbl-wrap">
-                  <table className="tbl">
-                    <thead>
-                      <tr>
-                        {[['title','Event'],['lowest_price','Floor $'],['corrected_price','Audit $']].map(([col, lbl]) => (
-                          <th key={col} onClick={() => doSort(col)} style={{ fontSize: '9px', padding: '6px' }}>{lbl}<SI col={col} sortCol={sortCol} sortDir={sortDir} /></th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pageData.map((d, i) => (
-                        <tr key={i} className={d.arbitrage === 1 ? 'arb' : ''}>
-                          <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '11px', padding: '6px' }} title={d.title}>{d.title}</td>
-                          <td className="mono blue" style={{ fontSize: '11px', padding: '6px' }}>${d.lowest_price?.toFixed(0)}</td>
-                          <td style={{ fontSize: '11px', padding: '6px' }}>
-                            <span className="price-tag" style={d.arbitrage === 1 ? { background: 'rgba(255,54,104,0.1)', color: 'var(--p)', borderColor: 'var(--p)' } : {}}>${d.corrected_price?.toFixed(0)}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                {/* Pagination */}
-                <div className="pag" style={{ padding: '6px 12px' }}>
-                  <span className="pg-info" style={{ fontSize: '9px' }}>Page {page} of {Math.ceil(tableData.length / PER) || 1}</span>
-                  <button className="pg-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)} style={{ width: 22, height: 22 }}>◀</button>
-                  <button className="pg-btn" disabled={page >= Math.ceil(tableData.length / PER)} onClick={() => setPage(p => p + 1)} style={{ width: 22, height: 22 }}>▶</button>
-                </div>
-              </div>
-            </div>
-          ) : renderEmptyState('Yield Analytics')
-        )}
 
       </main>
 
@@ -811,38 +803,7 @@ export default function App() {
         {toasts.map(t => <div key={t.id} className={`toast ${t.type}`}>{t.msg}</div>)}
       </div>
 
-      {/* Dataset Download / Modal Preview Overlay */}
-      {previewData && (
-        <div className="modal-overlay" onClick={() => setPreviewData(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '360px', margin: '0 20px' }}>
-            <div className="modal-hd" style={{ padding: '10px 14px' }}>
-              <div style={{ color: 'var(--t1)', fontWeight: '700', fontSize: '11px' }}>DATASET EXPORT</div>
-              <button className="modal-close" onClick={() => setPreviewData(null)}>&times;</button>
-            </div>
-            <div className="modal-body" style={{ padding: '12px' }}>
-              <p style={{ fontSize: '11.5px', color: 'var(--t2)', marginBottom: '14px', lineHeight: '1.4' }}>
-                You have loaded {previewData.rows?.length} records. Would you like to save this dataset locally as a CSV?
-              </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-ghost" onClick={() => setPreviewData(null)} style={{ flex: 1 }}>Close</button>
-                <button 
-                  className="btn btn-pri" 
-                  onClick={() => {
-                    const cols = Object.keys(previewData.rows[0] || {});
-                    const rawRows = previewData.rows.map(r => cols.map(c => typeof r[c] === 'string' && r[c].includes(',') ? `"${r[c]}"` : (r[c] ?? '')).join(','));
-                    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([[cols.join(','), ...rawRows].join('\n')], { type: 'text/csv' })), download: previewData.name });
-                    a.click();
-                    setPreviewData(null);
-                  }} 
-                  style={{ flex: 1 }}
-                >
-                  Download
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Dataset preview removed — CSV opens in new browser tab via exportCSV */}
 
       {/* iOS Bottom Navigation Bar */}
       <BottomTabs tab={tab} setTab={setTab} />
@@ -852,7 +813,7 @@ export default function App() {
         <div style={{ color: 'var(--t3)' }}>&copy; 2026 ARBITRAGE INTELLIGENCE.</div>
         <div style={{ display: 'flex', gap: '8px', color: 'var(--t3)' }}>
           {user && <span style={{ color: 'var(--b)' }}>{user.name}</span>}
-          <span>v10.0-iOS</span>
+          <span>v12.0-iOS</span>
           <span style={{ color: 'var(--g)' }}>ONLINE</span>
         </div>
       </footer>
