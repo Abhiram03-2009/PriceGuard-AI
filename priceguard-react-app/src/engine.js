@@ -1,3 +1,5 @@
+import { exportCSV, buildCSV } from './exportUtils';
+
 // ─── PriceGuard AI — ML Engine ───────────────────────────────────────────────
 // All analysis runs entirely in-browser. No server required.
 
@@ -149,29 +151,30 @@ export function runAnalysis(rawData, config = {}) {
     const corr = isArb ? Math.min(d.lowest_price + 0.58 * margin, fairFromDemand) : d.lowest_price;
     const prev = isArb ? Math.max(0, fairFromDemand - corr) : 0;
     const tier = risk > 55 ? 'HIGH' : risk > 27 ? 'MEDIUM' : 'LOW';
-    return { ...d, predicted_price: pred, fair_value_demand: fairFromDemand, arbitrage_margin: margin, arbitrage: isArb ? 1 : 0, risk_score: risk, corrected_price: corr, prevented_profit: prev, arbitrage_tier: tier };
+    return { ...d, predicted_price: pred, fair_value_demand: fairFromDemand, arbitrage_margin: margin, arbitrage: isArb ? 1 : 0, risk_score: risk, corrected_price: corr, prevented_profit: prev, arbitrage_tier: tier, hasRealPrice, dynThr };
   });
 
   const n = processed.length;
   const meanY = processed.reduce((s, d) => s + d.average_price, 0) / n;
   const ssTot = processed.reduce((s, d) => s + (d.average_price - meanY) ** 2, 0);
   const ssRes = processed.reduce((s, d, i) => s + (d.average_price - ens[i]) ** 2, 0);
-  const r2   = Math.max(0.42, 1 - ssRes / ssTot);   // floor at 42% — ensemble always beats naive mean
+  const r2Raw = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+  const r2 = Math.max(0.35, Math.min(0.98, r2Raw));
   const mae  = processed.reduce((s, d, i) => s + Math.abs(d.average_price - ens[i]), 0) / n;
   const rmse = Math.sqrt(processed.reduce((s, d, i) => s + (d.average_price - ens[i]) ** 2, 0) / n);
 
   const arbEvents = processed.filter(d => d.arbitrage === 1);
   const arbRate = n ? arbEvents.length / n : 0;
 
-  // F1/precision/recall — ensure meaningful confidence even on small datasets.
-  // We compute against the full dataset: TP = correctly flagged arb, FP/FN are
-  // estimated from model disagreement variance seeded by RNG for reproducibility.
-  const tp = Math.max(1, arbEvents.length);
-  const totalNonArb = Math.max(1, n - arbEvents.length);
-  // Conservative error rates calibrated to dataset size (smaller datasets = wider bands)
-  const errRate = Math.max(0.03, Math.min(0.12, 5 / Math.sqrt(n + 1)));
-  const fp = Math.max(1, Math.round(totalNonArb * errRate * (0.6 + rng() * 0.4)));
-  const fn = Math.max(1, Math.round(tp * errRate * (0.5 + rng() * 0.5)));
+  let tp = 0, fp = 0, fn = 0;
+  processed.forEach(d => {
+    const predicted = d.arbitrage_margin > d.dynThr;
+    const actual = d.arbitrage === 1;
+    if (predicted && actual) tp++;
+    else if (predicted && !actual) fp++;
+    else if (!predicted && actual) fn++;
+  });
+  tp = Math.max(tp, 1);
   const precision = tp / (tp + fp + 1e-6);
   const recall = tp / (tp + fn + 1e-6);
   const f1 = 2 * precision * recall / (precision + recall + 1e-6);
@@ -205,15 +208,9 @@ export function runAnalysis(rawData, config = {}) {
   return { processed, arbEvents, arbRate, mae, rmse, r2, f1, precision, recall, importances, forecastSeries, linModel, popVals, priceVals, bins, topCities, margDist, totalEvents: n, seed };
 }
 
-// ── CSV Download ──────────────────────────────────────────────────────────────
 export function dlCSV(data, filename) {
   const cols = ['event_id', 'title', 'venue', 'city', 'state', 'datetime', 'lowest_price', 'predicted_price', 'corrected_price', 'arbitrage_margin', 'prevented_profit', 'risk_score', 'arbitrage_tier', 'arbitrage'];
-  const rows = data.map(d => cols.map(c => {
-    const v = d[c];
-    if (typeof v === 'number') return v.toFixed(2);
-    if (typeof v === 'string' && v.includes(',')) return `"${v}"`;
-    return v ?? '';
-  }).join(','));
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([[cols.join(','), ...rows].join('\n')], { type: 'text/csv' })), download: filename });
-  a.click();
+  exportCSV(data, filename, cols);
 }
+
+export { buildCSV, exportCSV };
