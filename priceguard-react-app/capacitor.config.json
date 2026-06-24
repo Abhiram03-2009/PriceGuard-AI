@@ -4,10 +4,16 @@
   "webDir": "build",
   "bundledWebRuntime": false,
   "server": {
-    "allowNavigation": ["api.seatgeek.com"],
+    "allowNavigation": [
+      "api.seatgeek.com",
+      "app.ticketmaster.com",
+      "text.pollinations.ai",
+      "accounts.google.com",
+      "appleid.apple.com"
+    ],
     "iosScheme": "capacitor"
   },
   "ios": {
-    "allowsLinkPreview": false
+    "allowsLinkPreview": true
   }
 }
