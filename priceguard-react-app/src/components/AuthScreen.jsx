@@ -6,10 +6,10 @@ import {
   loginEmail,
   oauthSignIn,
   decodeGoogleCredential,
-  parseAppleResponse,
 } from '../authService';
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+// Hardcoded Google OAuth Client ID — production ready
+const GOOGLE_CLIENT_ID = '126112156480-oklsca75u1lfivpst0lnh0ddmu8sfu14.apps.googleusercontent.com';
 
 function initials(name) {
   if (!name) return '?';
@@ -67,93 +67,47 @@ export default function AuthScreen({ onAuth }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const googleBtnRef = useRef(null);
+  const googleScriptLoaded = useRef(false);
 
   const finishOAuth = useCallback((profile) => {
     setDraft(profile);
     setMode('profile');
   }, []);
 
+  // Load Google Identity Services and render official button
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
+    if (googleScriptLoaded.current) return;
+    googleScriptLoaded.current = true;
+
     const s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;
+    s.defer = true;
     s.onload = () => {
-      if (!window.google?.accounts?.id || !googleBtnRef.current) return;
+      if (!window.google?.accounts?.id) return;
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: (res) => {
           setLoading(false);
+          setError('');
           finishOAuth(decodeGoogleCredential(res.credential));
         },
+        auto_select: false,
+        cancel_on_tap_outside: true,
       });
-      window.google.accounts.id.renderButton(googleBtnRef.current, { theme: 'outline', size: 'large', width: 280, text: 'continue_with' });
-    };
-    document.head.appendChild(s);
-    return () => { s.remove(); };
-  }, [finishOAuth]);
-
-  const handleGoogle = async () => {
-    if (GOOGLE_CLIENT_ID && window.google?.accounts?.id) {
-      setLoading(true);
-      window.google.accounts.id.prompt((n) => {
-        if (n.isNotDisplayed() || n.isSkippedMoment()) {
-          setLoading(false);
-          setError('Google sign-in unavailable. Use email or configure REACT_APP_GOOGLE_CLIENT_ID.');
-        }
-      });
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const popup = window.open('https://accounts.google.com/signin/v2/identifier', 'google_oauth', 'width=500,height=600');
-      await new Promise(r => setTimeout(r, 1800));
-      popup?.close();
-      finishOAuth({ name: 'Google User', email: `user${Date.now() % 10000}@gmail.com`, provider: 'google', sub: `g_${Date.now()}` });
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApple = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      if (window.AppleID?.auth) {
-        const res = await window.AppleID.auth.signIn();
-        const profile = parseAppleResponse(res);
-        finishOAuth(oauthSignIn(profile));
-      } else {
-        await new Promise(r => setTimeout(r, 1200));
-        finishOAuth(oauthSignIn({ name: 'Apple User', email: `user${Date.now() % 10000}@icloud.com`, provider: 'apple', sub: `a_${Date.now()}` }));
-      }
-    } catch (e) {
-      if (e?.error !== 'popup_closed_by_user') setError('Apple sign-in failed. Try email authentication.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const s = document.createElement('script');
-    s.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
-    s.async = true;
-    s.onload = () => {
-      if (window.AppleID?.auth) {
-        window.AppleID.auth.init({
-          clientId: 'com.priceguard.ai',
-          scope: 'name email',
-          redirectURI: window.location.origin,
-          usePopup: true,
+      if (googleBtnRef.current) {
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: 280,
+          text: 'continue_with',
         });
       }
     };
+    s.onerror = () => setError('Failed to load Google Sign-In. Check your connection.');
     document.head.appendChild(s);
-    return () => s.remove();
-  }, []);
+    return () => { /* script stays loaded */ };
+  }, [finishOAuth]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -208,7 +162,6 @@ export default function AuthScreen({ onAuth }) {
     }
   };
 
-
   return (
     <div className="auth-screen">
       <div className="crypto-bg"><div className="crypto-grid" /><div className="market-scanline" /></div>
@@ -228,14 +181,14 @@ export default function AuthScreen({ onAuth }) {
         {mode === 'landing' && (
           <div className="auth-actions fade">
             <div className="auth-divider-label">Sign in to continue</div>
-            <button type="button" className="auth-btn auth-apple" onClick={handleApple} disabled={loading}>Continue with Apple</button>
-            {GOOGLE_CLIENT_ID ? <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center' }} /> : (
-              <button type="button" className="auth-btn auth-google" onClick={handleGoogle} disabled={loading}>Continue with Google</button>
-            )}
+
+            {/* Google Sign-In — official rendered button */}
+            <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: '44px' }} />
+
             {error && <div className="auth-error">{error}</div>}
             <div className="auth-or"><span /><span className="auth-or-text">or</span><span /></div>
             <button type="button" className="auth-btn auth-email" onClick={() => setMode('email')} disabled={loading}>Sign in with Email</button>
-            <p className="auth-legal">Secure authentication with email verification (2FA) for account protection.</p>
+            <p className="auth-legal">Secure authentication — Google OAuth or email with 2FA verification.</p>
           </div>
         )}
 

@@ -342,17 +342,10 @@ export default function App() {
                 }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                {profileEditing ? (
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input className="fi" value={editName} onChange={e => setEditName(e.target.value)} style={{ flex: 1, fontSize: '11px', padding: '4px 8px' }} />
-                    <button type="button" className="btn btn-pri btn-sm" onClick={saveProfile} style={{ padding: '2px 8px', fontSize: '10px' }}>Save</button>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
-                )}
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
                 <div style={{ fontFamily: 'var(--fm)', fontSize: '9.5px', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                <button type="button" className="profile-edit-link" onClick={() => { setEditName(user.name); setProfileEditing(p => !p); }}>
-                  {profileEditing ? 'Cancel' : 'Edit Profile'}
+                <button type="button" className="profile-edit-link" onClick={() => { setEditName(user.name); setProfileEditing(true); setDrawerOpen(false); }}>
+                  Edit Profile
                 </button>
               </div>
             </div>
@@ -797,6 +790,56 @@ export default function App() {
 
 
       </main>
+
+      {/* ── Edit Profile Modal ── */}
+      {profileEditing && (
+        <>
+          <div className="drawer-overlay open" onClick={() => setProfileEditing(false)} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            zIndex: 9999, width: 'min(340px, 90vw)',
+            background: 'var(--bg1)', border: '1px solid var(--b1)', borderRadius: '16px',
+            padding: '24px', boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <div style={{ fontFamily: 'var(--fh)', fontSize: '14px', fontWeight: 700, color: 'var(--t1)' }}>Edit Profile</div>
+              <button type="button" onClick={() => setProfileEditing(false)} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+            </div>
+            <form onSubmit={e => { e.preventDefault(); saveProfile(); }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', fontWeight: 600, display: 'block', marginBottom: '5px' }}>Display Name</label>
+                <input
+                  className="fi"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="Your name"
+                  style={{ width: '100%', fontSize: '13px', padding: '9px 12px' }}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', fontWeight: 600, display: 'block', marginBottom: '5px' }}>Email</label>
+                <input
+                  className="fi"
+                  value={user?.email || ''}
+                  readOnly
+                  style={{ width: '100%', fontSize: '12px', padding: '9px 12px', opacity: 0.5 }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--t2)', fontWeight: 600, display: 'block', marginBottom: '5px' }}>Account Provider</label>
+                <div style={{ fontSize: '12px', color: 'var(--t3)', fontFamily: 'var(--fm)', padding: '9px 12px', background: 'rgba(24,168,255,0.06)', borderRadius: '8px', border: '1px solid var(--b1)' }}>
+                  {user?.provider || 'email'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: '4px' }}>
+                <button type="button" className="btn btn-ghost" style={{ flex: 1, padding: '9px 0' }} onClick={() => setProfileEditing(false)}>Cancel</button>
+                <button type="submit" className="btn btn-pri" style={{ flex: 1, padding: '9px 0' }}>Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
 
       {/* Floating toasts */}
       <div className="toasts">

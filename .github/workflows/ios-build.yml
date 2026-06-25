@@ -1,16 +1,66 @@
-name: Build and Release iOS App — v10
+name: Build and Deploy PriceGuard AI
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
+  # ── Web Build & Deploy (GitHub Pages) ────────────────────────────────────────
+  build-web:
+    name: Build Web App
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./priceguard-react-app
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: priceguard-react-app/package-lock.json
+
+      - name: Install NPM Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Web App
+        env:
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+          REACT_APP_OPENAI_KEY: ${{ secrets.REACT_APP_OPENAI_KEY }}
+          REACT_APP_OPENAI_MODEL: gpt-3.5-turbo
+          CI: false
+        run: npm run build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: priceguard-react-app/build
+          retention-days: 7
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./priceguard-react-app/build
+          publish_branch: gh-pages
+          force_orphan: true
+
+  # ── iOS Build ─────────────────────────────────────────────────────────────────
   build-ios:
     name: Build and Submit iOS App
-    runs-on: macos-26
-    
+    runs-on: macos-latest
+    needs: build-web
+    if: github.ref == 'refs/heads/main'
+
     defaults:
       run:
         working-directory: ./priceguard-react-app
@@ -28,6 +78,11 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build Web App
+        env:
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
+          REACT_APP_OPENAI_KEY: ${{ secrets.REACT_APP_OPENAI_KEY }}
+          REACT_APP_OPENAI_MODEL: gpt-3.5-turbo
+          CI: false
         run: npm run build
 
       - name: Sync Capacitor (iOS)
@@ -40,32 +95,25 @@ jobs:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # create variables
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          # import certificate and provisioning profile from secrets
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-          # create temporary keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # ADD the temporary keychain to the search list so xcodebuild can find it
           security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | sed s/\"//g)
           security default-keychain -s $KEYCHAIN_PATH
 
-          # import certificate to keychain
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # verify certificate was imported
           security find-identity -v -p codesigning $KEYCHAIN_PATH
 
-          # apply provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           UUID=$(/usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin <<< $(security cms -D -i $PP_PATH))
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
@@ -76,7 +124,6 @@ jobs:
           TEAM_ID: ${{ secrets.TEAM_ID }}
         run: |
           cd ios/App
-          # Build the archive
           xcodebuild -project App.xcodeproj \
             -scheme App \
             -sdk iphoneos \
@@ -90,11 +137,9 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="$PP_UUID" \
             CODE_SIGN_IDENTITY="Apple Distribution"
 
-          # Inject provisioning profile mapping into exportOptions.plist
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" exportOptions.plist || true
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.priceguard.ai string $PP_UUID" exportOptions.plist || true
 
-          # Export IPA
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
@@ -106,11 +151,9 @@ jobs:
           APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
           APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
-          # Create private key file in the directory altool expects
           mkdir -p ~/.private_keys
           echo -n "$APPSTORE_API_PRIVATE_KEY" > ~/.private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8
-          
-          # Upload via xcrun altool
+
           xcrun altool --upload-app \
             -f $RUNNER_TEMP/build/App.ipa \
             -t ios \

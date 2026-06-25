@@ -15,20 +15,19 @@ export function buildCSV(data, columns) {
 }
 
 export function exportCSV(data, filename, columns) {
-  const csv = buildCSV(data, columns);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
+  if (!data || !data.length) return;
+  const cols = columns || Object.keys(data[0]);
+  const csv = buildCSV(data, cols);
 
-  // Open in new tab so browser shows the "Save As" dialog or previews in Sheets
+  // Build a data: URI so browsers open or trigger download reliably
+  // (avoids blob URL revocation issues on mobile/strict CSPs)
+  const encoded = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = encoded;
   a.download = filename;
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-
-  // Revoke after a short delay
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
 }

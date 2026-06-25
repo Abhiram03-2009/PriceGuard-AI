@@ -2,6 +2,7 @@
   "name": "priceguard-ai",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://abhiram03-2009.github.io/PriceGuard-AI",
   "dependencies": {
     "@capacitor/cli": "^8.3.1",
     "@capacitor/core": "^8.3.1",
