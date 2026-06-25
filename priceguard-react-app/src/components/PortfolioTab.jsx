@@ -209,27 +209,35 @@ export default function PortfolioTab({ results }) {
       {/* Platform Source Cards */}
       <div className="ios-card market-panel">
         <div className="card-hd" style={{ padding: '8px 12px' }}>
-          <div className="card-title" style={{ fontSize: '11px' }}>Connected Platforms</div>
+          <div className="card-title" style={{ fontSize: '11px' }}>Platform Integrations</div>
         </div>
         <div style={{ padding: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {PLATFORMS.map(p => (
-            <div key={p.id} style={{
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '9px',
-              border: '1px solid var(--b1)', borderRadius: '8px', background: 'var(--bg3)',
-            }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--fnav)', fontSize: '11px', fontWeight: '900',
-                color: p.color, background: p.bg, border: `1px solid ${p.color}33`,
-                flexShrink: 0,
-              }}>{p.code}</div>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--t1)' }}>{p.name}</div>
-                <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--g)' }}>● Connected</div>
+          {PLATFORMS.map(p => {
+            const isLive = p.id === 'seatgeek' || p.id === 'ticketmaster';
+            return (
+              <div key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '9px',
+                border: `1px solid ${isLive ? p.color + '44' : 'var(--b1)'}`,
+                borderRadius: '8px', background: isLive ? p.bg : 'rgba(255,255,255,0.01)',
+                opacity: isLive ? 1 : 0.5,
+              }}>
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '8px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--fnav)', fontSize: '11px', fontWeight: '900',
+                  color: p.color, background: p.bg, border: `1px solid ${p.color}33`,
+                  flexShrink: 0,
+                }}>{p.code}</div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--t1)' }}>{p.name}</div>
+                  {isLive
+                    ? <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--g)' }}>● Connected</div>
+                    : <div style={{ fontFamily: 'var(--fm)', fontSize: '8px', color: 'var(--a)' }}>○ Coming Soon</div>
+                  }
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
