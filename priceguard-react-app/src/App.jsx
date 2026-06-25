@@ -8,7 +8,7 @@ import DashboardAnalytics from './components/DashboardAnalytics';
 import { ScatterLinChart } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
 import { generateAdvisorReply, buildAuditSummary } from './advisor';
-import { askLLM } from './llmService';
+import { askLLM, getOpenAIKey, setOpenAIKey, clearOpenAIKey } from './llmService';
 import { loadSession, clearSession, updateProfile, getActivity, logActivity } from './authService';
 import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/Navbar';
@@ -62,6 +62,9 @@ export default function App() {
   const [chatTyping, setChatTyping] = useState(false);
   const lastAiIntent = useRef(null);
   const chatScroll = useRef(null);
+  const [aiKeyInput, setAiKeyInput] = useState('');
+  const [aiKeyStored, setAiKeyStored] = useState(() => !!getOpenAIKey());
+  const [showKeyEntry, setShowKeyEntry] = useState(false);
 
   // Theme Toggler
   const toggleTheme = () => {
@@ -98,20 +101,20 @@ export default function App() {
 
   const parseFile = (file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const rows = text.split('\n').map(r => r.split(','));
-      const headers = rows[0].map(h => h.trim().toLowerCase());
-      const data = rows.slice(1).filter(r => r.length > 1).map(r => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h] = r[i]?.trim());
-        return obj;
+    // Use PapaParse for robust CSV handling (quoted fields, commas in values, etc.)
+    import('papaparse').then(({ default: Papa }) => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: h => h.trim().toLowerCase(),
+        complete: ({ data }) => {
+          if (!data.length) { add('CSV appears empty or unreadable.', 'error'); return; }
+          onFetchedData(data);
+          setTab('dashboard');
+        },
+        error: () => add('Failed to parse CSV file.', 'error'),
       });
-      onFetchedData(data);
-      setTab('dashboard'); // Auto-redirect to dashboard on CSV load
-    };
-    reader.readAsText(file);
+    });
   };
 
   const doAnalyze = () => {
@@ -723,6 +726,43 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {/* OpenAI Key panel */}
+              <div style={{ padding: '6px 12px 0', borderBottom: '1px solid var(--b1)' }}>
+                {!aiKeyStored && !showKeyEntry && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--t3)' }}>🤖 GPT-4 not connected — using local AI</span>
+                    <button type="button" className="btn btn-ghost btn-sm" style={{ fontSize: '9px', padding: '2px 8px' }} onClick={() => setShowKeyEntry(true)}>+ Add OpenAI Key</button>
+                  </div>
+                )}
+                {aiKeyStored && !showKeyEntry && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--g)' }}>✓ GPT connected — powered by OpenAI</span>
+                    <button type="button" className="btn btn-ghost btn-sm" style={{ fontSize: '9px', padding: '2px 8px', color: 'var(--p)' }} onClick={() => { clearOpenAIKey(); setAiKeyStored(false); setAiKeyInput(''); }}>Remove</button>
+                  </div>
+                )}
+                {showKeyEntry && (
+                  <div style={{ display: 'flex', gap: 6, padding: '6px 0', alignItems: 'center' }}>
+                    <input
+                      className="fi"
+                      type="password"
+                      placeholder="sk-proj-..."
+                      value={aiKeyInput}
+                      onChange={e => setAiKeyInput(e.target.value)}
+                      style={{ flex: 1, fontSize: '11px', padding: '5px 8px', fontFamily: 'var(--fm)' }}
+                      autoFocus
+                    />
+                    <button type="button" className="btn btn-pri btn-sm" style={{ padding: '5px 10px', fontSize: '10px' }} onClick={() => {
+                      if (!aiKeyInput.trim().startsWith('sk-')) return;
+                      setOpenAIKey(aiKeyInput);
+                      setAiKeyStored(true);
+                      setShowKeyEntry(false);
+                      setAiKeyInput('');
+                    }}>Save</button>
+                    <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '5px 8px', fontSize: '10px' }} onClick={() => { setShowKeyEntry(false); setAiKeyInput(''); }}>✕</button>
+                  </div>
+                )}
+              </div>
 
               {/* Chat Thread */}
               <div className="chat-thread-bg" style={{ flex: 1, overflowY: 'auto', padding: '12px', background: 'rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
