@@ -1,9 +1,25 @@
 // ─── PriceGuard AI — LLM Service ─────────────────────────────────────────────
-// Uses OpenAI-compatible API if REACT_APP_OPENAI_KEY is set.
-// Falls back gracefully to the local advisor if not configured.
+// Reads API key from build-time env OR runtime localStorage override.
+// Users can paste their key once in the Chat tab — it persists in localStorage.
 
-const OPENAI_KEY = process.env.REACT_APP_OPENAI_KEY || '';
 const OPENAI_MODEL = process.env.REACT_APP_OPENAI_MODEL || 'gpt-3.5-turbo';
+const LS_KEY = 'pg_openai_key';
+
+export function getOpenAIKey() {
+  // Build-time env takes precedence (set in CI via GitHub secret)
+  const envKey = process.env.REACT_APP_OPENAI_KEY || '';
+  if (envKey) return envKey;
+  // Runtime override from localStorage (user-pasted key in Chat settings)
+  try { return localStorage.getItem(LS_KEY) || ''; } catch { return ''; }
+}
+
+export function setOpenAIKey(key) {
+  try { localStorage.setItem(LS_KEY, key.trim()); } catch {}
+}
+
+export function clearOpenAIKey() {
+  try { localStorage.removeItem(LS_KEY); } catch {}
+}
 
 function buildSystemPrompt(ctx) {
   const { results, rfTrees, gbRounds, gbLearningRate, dynThresholdMin, dynThresholdPercent } = ctx;
@@ -34,12 +50,12 @@ Guidelines:
 }
 
 export async function askLLM(message, ctx, chatHistory = []) {
-  if (!OPENAI_KEY) return null; // graceful fallback to local advisor
+  const key = getOpenAIKey();
+  if (!key) return null; // graceful fallback to local advisor
 
   const systemPrompt = buildSystemPrompt(ctx);
   const messages = [
     { role: 'system', content: systemPrompt },
-    // Include recent chat history for context (last 6 messages)
     ...chatHistory.slice(-6).map(m => ({
       role: m.role === 'ai' ? 'assistant' : 'user',
       content: m.text,
@@ -52,7 +68,7 @@ export async function askLLM(message, ctx, chatHistory = []) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_KEY}`,
+        'Authorization': `Bearer ${key}`,
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
