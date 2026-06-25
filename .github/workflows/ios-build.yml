@@ -35,8 +35,11 @@ jobs:
       - name: Build Web App
         env:
           REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
-          REACT_APP_OPENAI_KEY: ${{ secrets.REACT_APP_OPENAI_KEY }}
           REACT_APP_OPENAI_MODEL: gpt-3.5-turbo
+          # NOTE: REACT_APP_OPENAI_KEY is intentionally omitted from the build env.
+          # Baking it into the JS bundle exposes it publicly. Users supply their own
+          # key at runtime via the Chat tab (saved to localStorage). The local advisor
+          # fallback handles all queries when no key is present.
           CI: false
         run: npm run build
 
@@ -82,7 +85,6 @@ jobs:
       - name: Build Web App
         env:
           REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
-          REACT_APP_OPENAI_KEY: ${{ secrets.REACT_APP_OPENAI_KEY }}
           REACT_APP_OPENAI_MODEL: gpt-3.5-turbo
           CI: false
         run: npm run build
