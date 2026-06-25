@@ -11,6 +11,8 @@ jobs:
   build-web:
     name: Build Web App
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     defaults:
       run:
