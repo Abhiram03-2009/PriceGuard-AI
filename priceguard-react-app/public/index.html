@@ -4,10 +4,58 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#030912" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="PriceGuard AI — Ticket Arbitrage Intelligence Platform" />
     <title>PriceGuard AI</title>
+    <style>
+      /* Inline fallback so the page is never white even before React loads */
+      html, body { margin: 0; padding: 0; background: #030912; color: #f8fafc; font-family: system-ui, sans-serif; height: 100%; }
+      #root { min-height: 100vh; }
+      /* Splash shown before bundle executes */
+      #pre-splash {
+        position: fixed; inset: 0; background: #030912; display: flex;
+        flex-direction: column; align-items: center; justify-content: center;
+        z-index: 99999; transition: opacity 0.5s ease;
+      }
+      #pre-splash.hide { opacity: 0; pointer-events: none; }
+      #pre-splash-logo {
+        width: 80px; height: 80px; border-radius: 50%;
+        border: 2px solid rgba(24,168,255,0.6);
+        animation: pre-glow 2s ease-in-out infinite;
+        overflow: hidden; margin-bottom: 20px;
+      }
+      #pre-splash-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+      #pre-splash-title { font-size: 22px; font-weight: 700; letter-spacing: 4px; color: #18a8ff; margin-bottom: 8px; }
+      #pre-splash-sub { font-size: 11px; color: #64748b; letter-spacing: 2px; }
+      @keyframes pre-glow {
+        0%,100% { box-shadow: 0 0 20px rgba(24,168,255,0.4); }
+        50% { box-shadow: 0 0 44px rgba(24,168,255,0.85); }
+      }
+    </style>
   </head>
   <body>
+    <!-- Shown instantly before React hydrates — hidden once JS runs -->
+    <div id="pre-splash">
+      <div id="pre-splash-logo">
+        <img src="%PUBLIC_URL%/logo.png" alt="PriceGuard AI" onerror="this.style.display='none'" />
+      </div>
+      <div id="pre-splash-title">PriceGuard AI</div>
+      <div id="pre-splash-sub">Market Protection Terminal</div>
+    </div>
     <div id="root"></div>
+    <script>
+      // Hide the pre-splash as soon as React's root is populated
+      var _ps = document.getElementById('pre-splash');
+      var _ob = new MutationObserver(function() {
+        var root = document.getElementById('root');
+        if (root && root.children.length > 0) {
+          _ps.classList.add('hide');
+          setTimeout(function(){ _ps.remove(); }, 600);
+          _ob.disconnect();
+        }
+      });
+      _ob.observe(document.getElementById('root'), { childList: true });
+    </script>
   </body>
 </html>

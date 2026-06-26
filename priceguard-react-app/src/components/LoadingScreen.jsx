@@ -28,11 +28,14 @@ export default function LoadingScreen({ onFinished }) {
   ), []);
 
   useEffect(() => {
+    // Step through loader text every 600ms (total ~4.2s for 7 steps)
     const stepTimers = LOADER_STEPS.map((_, idx) =>
-      setTimeout(() => setStepIdx(idx), idx * 900)
+      setTimeout(() => setStepIdx(idx), idx * 600)
     );
-    const zoomTimer   = setTimeout(() => setIsZooming(true), 6000);
-    const finishTimer = setTimeout(() => onFinished?.(), 6900);
+    // Start zoom-out at 4.4s
+    const zoomTimer = setTimeout(() => setIsZooming(true), 4400);
+    // Call onFinished at 5.2s — well before any timeout, fast enough for users
+    const finishTimer = setTimeout(() => onFinished?.(), 5200);
 
     return () => {
       stepTimers.forEach(clearTimeout);
@@ -47,13 +50,22 @@ export default function LoadingScreen({ onFinished }) {
         <div className="crypto-grid" />
         <div className="market-scanline" />
         {particles.map(p => (
-          <div key={p.id} className="crypto-particle" style={{ left: `${p.left}%`, animationDelay: `${p.delay}s`, fontSize: `${p.size}px`, animationDuration: `${p.duration}s` }}>
+          <div
+            key={p.id}
+            className="crypto-particle"
+            style={{
+              left: `${p.left}%`,
+              animationDelay: `${p.delay}s`,
+              fontSize: `${p.size}px`,
+              animationDuration: `${p.duration}s`,
+            }}
+          >
             {p.text}
           </div>
         ))}
       </div>
 
-      {/* Cyber Blue coin — Y-axis only, real logo on back face */}
+      {/* Spinning coin */}
       <div className={`coin-container ${isZooming ? 'coin-zoom' : ''}`}>
         <div className="coin coin-y-spin">
           <div className="coin-edge" />
@@ -63,7 +75,6 @@ export default function LoadingScreen({ onFinished }) {
           </div>
           <div className="coin-side coin-back">
             <div className="coin-circuit" />
-            {/* Real app logo on back face */}
             <img src={logo} alt="PriceGuard AI" className="coin-logo-img" />
           </div>
         </div>

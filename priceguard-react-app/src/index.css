@@ -1714,7 +1714,7 @@ body.light-theme .ticker-tile {
 
 /* Longer load bar for 6s animation */
 .load-bar-long {
-  animation: loadbar 6.0s ease forwards !important;
+  animation: loadbar 5.0s ease forwards !important;
 }
 
 /* Step text fade-in */
