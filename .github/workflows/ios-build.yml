@@ -128,6 +128,9 @@ jobs:
           TEAM_ID: ${{ secrets.TEAM_ID }}
         run: |
           cd ios/App
+          # Use GitHub run number as CFBundleVersion — always increments, never repeats
+          BUILD_NUM=$(( 100 + ${{ github.run_number }} ))
+          echo "Using CFBundleVersion: $BUILD_NUM"
           xcodebuild -project App.xcodeproj \
             -scheme App \
             -sdk iphoneos \
@@ -139,7 +142,9 @@ jobs:
             DEVELOPMENT_TEAM=$TEAM_ID \
             PROVISIONING_PROFILE="$PP_UUID" \
             PROVISIONING_PROFILE_SPECIFIER="$PP_UUID" \
-            CODE_SIGN_IDENTITY="Apple Distribution"
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CURRENT_PROJECT_VERSION=$BUILD_NUM \
+            MARKETING_VERSION=1.5
 
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" exportOptions.plist || true
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.priceguard.ai string $PP_UUID" exportOptions.plist || true
