@@ -62,7 +62,7 @@ jobs:
   # ── iOS Build ─────────────────────────────────────────────────────────────────
   build-ios:
     name: Build and Submit iOS App
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: build-web
     if: github.ref == 'refs/heads/main'
 
