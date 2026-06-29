@@ -156,6 +156,36 @@ body::before {
 .load-bar { height: 100%; background: linear-gradient(90deg, var(--bd), var(--b), var(--c)); -webkit-animation: loadbar 3.8s ease forwards; animation: loadbar 3.8s ease forwards; }
 .load-status { font-family: var(--fm); font-size: 10px; color: var(--t3); letter-spacing: 2px; }
 
+/* ── LOADING SCREEN WORDMARK ── */
+.load-wordmark {
+  font-family: var(--fnav);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.wordmark-ai {
+  font-family: var(--fnav);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-style: italic;
+  margin-left: 5px;
+}
+.load-sub {
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--t3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
 /* ── NAVBAR ── */
 .navbar {
   position: sticky; top: 0; z-index: 100;
