@@ -63,7 +63,7 @@ export default function App() {
   const lastAiIntent = useRef(null);
   const chatScroll = useRef(null);
   const [aiKeyInput, setAiKeyInput] = useState('');
-  const [aiKeyStored, setAiKeyStored] = useState(() => !!getOpenAIKey());
+  const [aiKeyStored, setAiKeyStored] = useState(() => { try { return !!getOpenAIKey(); } catch { return false; } });
   const [showKeyEntry, setShowKeyEntry] = useState(false);
 
   // Theme Toggler
