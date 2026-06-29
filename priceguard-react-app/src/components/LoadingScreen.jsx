@@ -14,7 +14,8 @@ const LOADER_STEPS = [
 
 export default function LoadingScreen({ onFinished }) {
   const [isZooming, setIsZooming] = useState(false);
-  const [stepIdx, setStepIdx] = useState(0);
+  const [hidden, setHidden]       = useState(false);
+  const [stepIdx, setStepIdx]     = useState(0);
 
   const particles = useMemo(() => (
     Array.from({ length: 28 }, (_, i) => ({
@@ -31,15 +32,22 @@ export default function LoadingScreen({ onFinished }) {
     const stepTimers = LOADER_STEPS.map((_, idx) =>
       setTimeout(() => setStepIdx(idx), idx * 900)
     );
+    // Start zoom-out at 6s
     const zoomTimer   = setTimeout(() => setIsZooming(true), 6000);
+    // After the 0.8s CSS transition ends, fully hide the div so nothing blocks auth
+    const hideTimer   = setTimeout(() => setHidden(true), 6850);
+    // Signal App to unmount us
     const finishTimer = setTimeout(() => onFinished?.(), 6900);
 
     return () => {
       stepTimers.forEach(clearTimeout);
       clearTimeout(zoomTimer);
+      clearTimeout(hideTimer);
       clearTimeout(finishTimer);
     };
   }, [onFinished]);
+
+  if (hidden) return null;
 
   return (
     <div className={`loading ${isZooming ? 'zoom-out' : ''}`}>
@@ -63,7 +71,6 @@ export default function LoadingScreen({ onFinished }) {
           </div>
           <div className="coin-side coin-back">
             <div className="coin-circuit" />
-            {/* Real app logo on back face */}
             <img src={logo} alt="PriceGuard AI" className="coin-logo-img" />
           </div>
         </div>
