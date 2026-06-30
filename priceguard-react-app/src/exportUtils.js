@@ -19,15 +19,19 @@ export function exportCSV(data, filename, columns) {
   const cols = columns || Object.keys(data[0]);
   const csv = buildCSV(data, cols);
 
-  // Build a data: URI so browsers open or trigger download reliably
-  // (avoids blob URL revocation issues on mobile/strict CSPs)
-  const encoded = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  const a = document.createElement('a');
-  a.href = encoded;
-  a.download = filename;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // iOS-compatible CSV export using Blob
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+
+  // Cleanup
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 100);
 }
