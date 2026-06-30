@@ -19,6 +19,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [user, setUser] = useState(null);
+
   const [tab, setTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
   const [dataMode, setDataMode] = useState('public');

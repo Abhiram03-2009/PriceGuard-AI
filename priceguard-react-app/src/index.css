@@ -1338,14 +1338,6 @@ body.light-theme .toast {
 }
 
 /* Blue crypto-dollar loader */
-.loading {
-  transform-origin: center;
-}
-.loading.zoom-out {
-  transform: scale(1.85);
-  opacity: 0;
-  filter: blur(2px);
-}
 .coin-container {
   perspective: 1200px;
   margin-bottom: 28px;
