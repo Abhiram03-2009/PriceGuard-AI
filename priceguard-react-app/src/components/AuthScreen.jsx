@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import logo from '../logo.png';
 import {
   registerEmail,
-  verifyEmailAndCreateAccount,
   loginEmail,
   oauthSignIn,
   decodeGoogleCredential,
@@ -25,7 +24,13 @@ function ProfileSetupStep({ draft, onComplete }) {
   const handlePhoto = (e) => {
     const file = e.target.files[0];
     if (!file?.type.startsWith('image/')) { setError('Please select an image file.'); return; }
-    setPreviewUrl(URL.createObjectURL(file));
+    
+    // Convert to base64 for persistent storage
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPreviewUrl(event.target.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -60,9 +65,6 @@ export default function AuthScreen({ onAuth }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [verifyCode, setVerifyCode] = useState('');
-  const [tfaCode, setTfaCode] = useState('');
-  const [devCode, setDevCode] = useState('');
   const [isNew, setIsNew] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -116,22 +118,7 @@ export default function AuthScreen({ onAuth }) {
     setLoading(true);
     setError('');
     try {
-      const { code } = await registerEmail(email, password, name);
-      setDevCode(code);
-      setMode('verify');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const user = await verifyEmailAndCreateAccount(verifyCode);
+      const user = await registerEmail(email, password, name);
       setDraft(user);
       setMode('profile');
     } catch (err) {
@@ -146,13 +133,7 @@ export default function AuthScreen({ onAuth }) {
     setLoading(true);
     setError('');
     try {
-      const result = await loginEmail(email, password, mode === 'tfa' ? tfaCode : null);
-      if (result.requiresTfa) {
-        setDevCode(result.code);
-        setMode('tfa');
-        setLoading(false);
-        return;
-      }
+      const result = await loginEmail(email, password);
       setDraft(result.user);
       setMode('profile');
     } catch (err) {
@@ -188,7 +169,7 @@ export default function AuthScreen({ onAuth }) {
             {error && <div className="auth-error">{error}</div>}
             <div className="auth-or"><span /><span className="auth-or-text">or</span><span /></div>
             <button type="button" className="auth-btn auth-email" onClick={() => setMode('email')} disabled={loading}>Sign in with Email</button>
-            <p className="auth-legal">Secure authentication — Google OAuth or email with 2FA verification.</p>
+            <p className="auth-legal">Secure authentication — Google OAuth or email.</p>
           </div>
         )}
 
@@ -212,27 +193,9 @@ export default function AuthScreen({ onAuth }) {
                 <input type="password" className="fi auth-input" value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
               {error && <div className="auth-error">{error}</div>}
-              <button type="submit" className="auth-btn auth-submit" disabled={loading}>{loading ? 'Please wait…' : (isNew ? 'Send Verification Code' : 'Sign In')}</button>
+              <button type="submit" className="auth-btn auth-submit" disabled={loading}>{loading ? 'Please wait…' : (isNew ? 'Create Account' : 'Sign In')}</button>
             </form>
             <button type="button" className="auth-switch" onClick={() => { setIsNew(n => !n); setError(''); }}>{isNew ? 'Already have an account?' : 'Create new account'}</button>
-          </div>
-        )}
-
-        {(mode === 'verify' || mode === 'tfa') && (
-          <div className="auth-actions fade">
-            <div className="auth-divider-label">{mode === 'verify' ? 'Verify Your Email' : 'Two-Factor Authentication'}</div>
-            <p style={{ fontSize: '11px', color: 'var(--t2)', lineHeight: 1.5, marginBottom: '10px' }}>
-              Enter the 6-digit code sent to your {mode === 'verify' ? 'email' : 'device'}.
-            </p>
-            {devCode && (
-              <div className="auth-verify-hint">Verification code: <strong>{devCode}</strong></div>
-            )}
-            <form onSubmit={mode === 'verify' ? handleVerify : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <input type="text" className="fi auth-input" placeholder="000000" maxLength={6} value={mode === 'verify' ? verifyCode : tfaCode}
-                onChange={e => (mode === 'verify' ? setVerifyCode : setTfaCode)(e.target.value.replace(/\D/g, ''))} style={{ textAlign: 'center', letterSpacing: '8px', fontSize: '18px' }} required />
-              {error && <div className="auth-error">{error}</div>}
-              <button type="submit" className="auth-btn auth-submit" disabled={loading}>Verify &amp; Continue</button>
-            </form>
           </div>
         )}
 

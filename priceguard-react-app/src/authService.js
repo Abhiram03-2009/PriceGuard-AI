@@ -4,7 +4,6 @@
 
 const USERS_KEY   = 'pg_users';
 const SESSION_KEY = 'pg_session';
-const PENDING_KEY = 'pg_pending';
 const ACTIVITY_KEY = 'pg_activity';
 
 function getUsers() {
@@ -18,40 +17,27 @@ export function loadSession() {
 function saveSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
 export function clearSession() { localStorage.removeItem(SESSION_KEY); }
 
-function genCode() { return String(Math.floor(100000 + Math.random() * 900000)); }
-
 // ── Register ──────────────────────────────────────────────────────────────────
 export async function registerEmail(email, password, name) {
   await new Promise(r => setTimeout(r, 400));
   const users = getUsers();
   const key = email.toLowerCase();
   if (users[key]) throw new Error('An account with this email already exists.');
-  const code = genCode();
-  localStorage.setItem(PENDING_KEY, JSON.stringify({
-    email: key, password, name, code, expiresAt: Date.now() + 10 * 60 * 1000,
-  }));
-  console.info(`[DEV] Verification code for ${email}: ${code}`);
-  return { code };
-}
-
-// ── Verify email code → create account ───────────────────────────────────────
-export async function verifyEmailAndCreateAccount(inputCode) {
-  await new Promise(r => setTimeout(r, 300));
-  const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
-  if (!pending) throw new Error('No pending registration. Please start again.');
-  if (Date.now() > pending.expiresAt) throw new Error('Code expired. Please register again.');
-  if (inputCode.trim() !== pending.code) throw new Error('Incorrect code. Try again.');
-  const users = getUsers();
   const id = `u_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const user = { id, email: pending.email, name: pending.name, provider: 'email', createdAt: Date.now(), avatarUrl: null };
-  users[pending.email] = { ...user, pwHash: btoa(pending.password) };
+  const user = { id, email: key, name, provider: 'email', createdAt: Date.now(), avatarUrl: null };
+  users[key] = { ...user, pwHash: btoa(password) };
   saveUsers(users);
-  localStorage.removeItem(PENDING_KEY);
   saveSession(user);
   return user;
 }
 
-// ── Login with 2FA ────────────────────────────────────────────────────────────
+// ── Verify email code → create account (deprecated, kept for compatibility) ─────
+export async function verifyEmailAndCreateAccount(inputCode) {
+  // No-op - registration now creates account directly
+  throw new Error('Email verification is no longer required. Please use the simplified registration flow.');
+}
+
+// ── Login without 2FA ───────────────────────────────────────────────────────────
 export async function loginEmail(email, password, tfaCode = null) {
   await new Promise(r => setTimeout(r, 400));
   const users = getUsers();
@@ -59,17 +45,6 @@ export async function loginEmail(email, password, tfaCode = null) {
   const record = users[key];
   if (!record) throw new Error('No account found with this email.');
   if (record.pwHash !== btoa(password)) throw new Error('Incorrect password.');
-  if (tfaCode === null) {
-    const code = genCode();
-    localStorage.setItem('pg_tfa', JSON.stringify({ email: key, code, expiresAt: Date.now() + 5 * 60 * 1000 }));
-    console.info(`[DEV] TFA code for ${email}: ${code}`);
-    return { requiresTfa: true, code };
-  }
-  const tfa = JSON.parse(localStorage.getItem('pg_tfa') || 'null');
-  if (!tfa || tfa.email !== key) throw new Error('TFA session expired. Sign in again.');
-  if (Date.now() > tfa.expiresAt) throw new Error('TFA code expired. Sign in again.');
-  if (tfaCode.trim() !== tfa.code) throw new Error('Incorrect TFA code.');
-  localStorage.removeItem('pg_tfa');
   const { pwHash, ...user } = record; // eslint-disable-line no-unused-vars
   saveSession(user);
   return { user };
