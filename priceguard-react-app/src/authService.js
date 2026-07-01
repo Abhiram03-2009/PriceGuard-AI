@@ -78,6 +78,18 @@ export function decodeGoogleCredential(credential) {
   }
 }
 
+// ── Parse native Google Sign-In result (Capacitor iOS) ────────────────────────
+export function parseNativeGoogleResult(res) {
+  const profile = res?.result?.profile || {};
+  return {
+    name: profile.name || profile.givenName || 'Google User',
+    email: profile.email || `google_${Date.now()}@gmail.com`,
+    picture: profile.imageUrl || null,
+    sub: profile.id || `g_${Date.now()}`,
+    provider: 'google',
+  };
+}
+
 // ── Parse Apple response ──────────────────────────────────────────────────────
 export function parseAppleResponse(res) {
   const email = res?.authorization?.id_token

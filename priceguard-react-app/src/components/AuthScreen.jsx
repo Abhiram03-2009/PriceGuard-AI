@@ -1,14 +1,20 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import logo from '../logo.png';
 import {
   registerEmail,
   loginEmail,
   oauthSignIn,
   decodeGoogleCredential,
+  parseNativeGoogleResult,
 } from '../authService';
 
 // Google OAuth Client ID from environment variable or fallback
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '126112156480-oklsca75u1lfivpst0lnh0ddmu8sfu14.apps.googleusercontent.com';
+// iOS-type OAuth Client ID (native Google Sign-In SDK, not the web GSI client above)
+const GOOGLE_IOS_CLIENT_ID = process.env.REACT_APP_GOOGLE_IOS_CLIENT_ID || '126112156480-k1jpteivubnofqlk32299fs7geh28nfg.apps.googleusercontent.com';
+const IS_NATIVE = Capacitor.isNativePlatform();
 
 function initials(name) {
   if (!name) return '?';
@@ -76,8 +82,31 @@ export default function AuthScreen({ onAuth }) {
     setMode('profile');
   }, []);
 
-  // Load Google Identity Services and render official button
+  // Native iOS: initialize the native Google Sign-In SDK instead of the web GSI script
   useEffect(() => {
+    if (!IS_NATIVE) return;
+    SocialLogin.initialize({
+      google: { iOSClientId: GOOGLE_IOS_CLIENT_ID, mode: 'online' },
+    }).catch((err) => {
+      console.error('[Google] Native init error:', err);
+      setError('Google Sign-In failed to load. Please try email sign-in instead.');
+    });
+  }, []);
+
+  const handleNativeGoogleSignIn = async () => {
+    setError('');
+    try {
+      const res = await SocialLogin.login({ provider: 'google', options: {} });
+      finishOAuth(parseNativeGoogleResult(res));
+    } catch (err) {
+      console.error('[Google] Native sign-in error:', err);
+      setError('Google Sign-In failed. Please try again or use email.');
+    }
+  };
+
+  // Load Google Identity Services and render official button (web only)
+  useEffect(() => {
+    if (IS_NATIVE) return;
     if (googleScriptLoaded.current) return;
     googleScriptLoaded.current = true;
 
@@ -181,8 +210,14 @@ export default function AuthScreen({ onAuth }) {
           <div className="auth-actions fade">
             <div className="auth-divider-label">Sign in to continue</div>
 
-            {/* Google Sign-In — official rendered button */}
-            <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: '44px' }} />
+            {/* Google Sign-In — native SDK button on iOS, official GSI-rendered button on web */}
+            {IS_NATIVE ? (
+              <button type="button" className="auth-btn auth-google" onClick={handleNativeGoogleSignIn} disabled={loading}>
+                Continue with Google
+              </button>
+            ) : (
+              <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: '44px' }} />
+            )}
 
             {error && <div className="auth-error">{error}</div>}
             <div className="auth-or"><span /><span className="auth-or-text">or</span><span /></div>
