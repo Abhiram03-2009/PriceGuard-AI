@@ -9,7 +9,7 @@ import { ScatterLinChart } from './components/Charts';
 import { runAnalysis, dlCSV } from './engine';
 import { generateAdvisorReply, buildAuditSummary } from './advisor';
 import { askLLM, getOpenAIKey, setOpenAIKey, clearOpenAIKey } from './llmService';
-import { loadSession, clearSession, updateProfile, getActivity, logActivity } from './authService';
+import { loadSession, clearSession, updateProfile, deleteAccount, getActivity, logActivity } from './authService';
 import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/Navbar';
 import BottomTabs from './components/BottomTabs';
@@ -520,6 +520,32 @@ export default function App() {
               onClick={() => { setDrawerOpen(false); clearSession(); setAuthed(false); setUser(null); setRawData(null); setResults(null); }}
             >
               Sign Out
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ width: '100%', padding: '9px 0', fontSize: '11px', borderColor: 'rgba(255,54,104,0.4)', color: '#ff3668' }}
+              onClick={() => {
+                if (!user?.id) return;
+                if (window.confirm('Delete your account? This permanently removes your profile and activity history and cannot be undone.')) {
+                  deleteAccount(user.id);
+                  setDrawerOpen(false);
+                  setAuthed(false);
+                  setUser(null);
+                  setRawData(null);
+                  setResults(null);
+                }
+              }}
+            >
+              Delete Account
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ width: '100%', padding: '9px 0', fontSize: '10.5px', color: 'var(--t3)' }}
+              onClick={() => window.open('https://abhiram03-2009.github.io/PriceGuard-AI/privacy.html', '_blank', 'noopener,noreferrer')}
+            >
+              Privacy Policy
             </button>
           </div>
         </div>
