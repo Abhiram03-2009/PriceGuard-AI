@@ -64,8 +64,9 @@ const NEWS_FEED = [
 const sentimentColors = { bullish: 'var(--g)', neutral: 'var(--a)', bearish: 'var(--p)' };
 const sentimentLabels = { bullish: '▲ BULLISH', neutral: '● NEUTRAL', bearish: '▼ BEARISH' };
 
-function openArticle(url) {
-  window.open(url, '_blank', 'noopener,noreferrer');
+function openArticle(headline) {
+  const searchQuery = encodeURIComponent(headline);
+  window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank', 'noopener,noreferrer');
 }
 
 export default function NewsTab() {
@@ -203,7 +204,7 @@ export default function NewsTab() {
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm news-read-btn"
-                  onClick={e => { e.stopPropagation(); openArticle(article.url); }}
+                  onClick={e => { e.stopPropagation(); openArticle(article.headline); }}
                 >
                   Read Full Story →
                 </button>

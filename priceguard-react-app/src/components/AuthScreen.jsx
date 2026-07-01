@@ -86,13 +86,20 @@ export default function AuthScreen({ onAuth }) {
     s.async = true;
     s.defer = true;
     s.onload = () => {
-      if (!window.google?.accounts?.id) return;
+      if (!window.google?.accounts?.id) {
+        setError('Google Sign-In failed to load. Please try email sign-in instead.');
+        return;
+      }
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: (res) => {
           setLoading(false);
           setError('');
-          finishOAuth(decodeGoogleCredential(res.credential));
+          try {
+            finishOAuth(decodeGoogleCredential(res.credential));
+          } catch (err) {
+            setError('Google Sign-In failed. Please try again or use email.');
+          }
         },
         auto_select: false,
         cancel_on_tap_outside: true,
