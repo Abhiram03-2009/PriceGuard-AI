@@ -37,6 +37,7 @@ export default function App() {
   const [analyticsExpanded, setAnalyticsExpanded] = useState(true);
   const [profileEditing, setProfileEditing] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editAvatar, setEditAvatar] = useState(null);
   const [drag, setDrag] = useState(false);
   const fileRef = useRef(null);
   const dashboardRef = useRef(null);
@@ -283,10 +284,26 @@ export default function App() {
 
   const saveProfile = () => {
     if (!user?.id || !editName.trim()) return;
-    const updated = updateProfile(user.id, { name: editName.trim() });
+    const updates = { name: editName.trim() };
+    if (editAvatar) {
+      updates.avatarUrl = editAvatar;
+    }
+    const updated = updateProfile(user.id, updates);
     setUser(updated);
     setProfileEditing(false);
+    setEditAvatar(null);
     add('Profile updated.');
+  };
+
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file?.type.startsWith('image/')) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setEditAvatar(event.target.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const scrollToAnalytics = () => {
@@ -348,7 +365,7 @@ export default function App() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--t1)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
                 <div style={{ fontFamily: 'var(--fm)', fontSize: '9.5px', color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                <button type="button" className="profile-edit-link" onClick={() => { setEditName(user.name); setProfileEditing(true); setDrawerOpen(false); }}>
+                <button type="button" className="profile-edit-link" onClick={() => { setEditName(user.name); setEditAvatar(null); setProfileEditing(true); setDrawerOpen(false); }}>
                   Edit Profile
                 </button>
               </div>
@@ -847,6 +864,27 @@ export default function App() {
               <button type="button" onClick={() => setProfileEditing(false)} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
             </div>
             <form onSubmit={e => { e.preventDefault(); saveProfile(); }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                <div style={{ position: 'relative', width: '80px', height: '80px' }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--b1)', background: 'var(--bg2)' }}>
+                    {editAvatar || user?.avatarUrl ? (
+                      <img src={editAvatar || user.avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 700, color: 'var(--t2)' }}>
+                        {user?.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) : '?'}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '28px', height: '28px', borderRadius: '50%', background: 'var(--b)', border: '2px solid var(--bg1)', color: '#fff', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    ✎
+                  </button>
+                  <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+                </div>
+              </div>
               <div>
                 <label style={{ fontSize: '11px', color: 'var(--t2)', fontWeight: 600, display: 'block', marginBottom: '5px' }}>Display Name</label>
                 <input
@@ -874,7 +912,7 @@ export default function App() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: '4px' }}>
-                <button type="button" className="btn btn-ghost" style={{ flex: 1, padding: '9px 0' }} onClick={() => setProfileEditing(false)}>Cancel</button>
+                <button type="button" className="btn btn-ghost" style={{ flex: 1, padding: '9px 0' }} onClick={() => { setProfileEditing(false); setEditAvatar(null); }}>Cancel</button>
                 <button type="submit" className="btn btn-pri" style={{ flex: 1, padding: '9px 0' }}>Save Changes</button>
               </div>
             </form>
