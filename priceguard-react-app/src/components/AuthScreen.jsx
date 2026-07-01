@@ -7,8 +7,8 @@ import {
   decodeGoogleCredential,
 } from '../authService';
 
-// Hardcoded Google OAuth Client ID — production ready
-const GOOGLE_CLIENT_ID = '126112156480-oklsca75u1lfivpst0lnh0ddmu8sfu14.apps.googleusercontent.com';
+// Google OAuth Client ID from environment variable or fallback
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '126112156480-oklsca75u1lfivpst0lnh0ddmu8sfu14.apps.googleusercontent.com';
 
 function initials(name) {
   if (!name) return '?';
