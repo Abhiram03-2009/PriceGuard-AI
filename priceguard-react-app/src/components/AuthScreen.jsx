@@ -86,18 +86,23 @@ export default function AuthScreen({ onAuth }) {
     s.async = true;
     s.defer = true;
     s.onload = () => {
+      console.log('[Google] Script loaded');
       if (!window.google?.accounts?.id) {
+        console.error('[Google] window.google.accounts.id not available');
         setError('Google Sign-In failed to load. Please try email sign-in instead.');
         return;
       }
+      console.log('[Google] Initializing with client ID:', GOOGLE_CLIENT_ID);
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: (res) => {
+          console.log('[Google] Callback received');
           setLoading(false);
           setError('');
           try {
             finishOAuth(decodeGoogleCredential(res.credential));
           } catch (err) {
+            console.error('[Google] OAuth error:', err);
             setError('Google Sign-In failed. Please try again or use email.');
           }
         },
@@ -105,15 +110,21 @@ export default function AuthScreen({ onAuth }) {
         cancel_on_tap_outside: true,
       });
       if (googleBtnRef.current) {
+        console.log('[Google] Rendering button');
         window.google.accounts.id.renderButton(googleBtnRef.current, {
           theme: 'outline',
           size: 'large',
           width: 280,
           text: 'continue_with',
         });
+      } else {
+        console.warn('[Google] Button ref not available');
       }
     };
-    s.onerror = () => setError('Failed to load Google Sign-In. Check your connection.');
+    s.onerror = () => {
+      console.error('[Google] Script load error');
+      setError('Failed to load Google Sign-In. Check your connection.');
+    };
     document.head.appendChild(s);
     return () => { /* script stays loaded */ };
   }, [finishOAuth]);
