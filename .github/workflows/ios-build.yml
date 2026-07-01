@@ -136,6 +136,13 @@ jobs:
           # Use GitHub run number as CFBundleVersion — always increments, never repeats
           BUILD_NUM=$(( 100 + ${{ github.run_number }} ))
           echo "Using CFBundleVersion: $BUILD_NUM"
+          # CODE_SIGNING_ALLOWED=NO here (instead of forcing CODE_SIGN_STYLE/PROVISIONING_PROFILE
+          # on the archive action) because those overrides apply to every target in the build,
+          # including the resource-bundle helper targets Xcode auto-generates for SPM packages
+          # like GoogleSignIn's dependency tree (GoogleUtilities, AppAuth, etc.) — those bundle
+          # targets can't carry a provisioning profile and the archive hard-fails if one is forced
+          # on them. Manual signing is applied for real at the -exportArchive step below instead,
+          # via exportOptions.plist, which only touches the App target.
           xcodebuild -project App.xcodeproj \
             -scheme App \
             -sdk iphoneos \
@@ -143,14 +150,11 @@ jobs:
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination generic/platform=iOS \
             archive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=$TEAM_ID \
-            PROVISIONING_PROFILE="$PP_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PP_UUID" \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGNING_ALLOWED=NO \
             CURRENT_PROJECT_VERSION=$BUILD_NUM \
             MARKETING_VERSION=1.5
 
+          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" exportOptions.plist || true
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" exportOptions.plist || true
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.priceguard.ai string $PP_UUID" exportOptions.plist || true
 
