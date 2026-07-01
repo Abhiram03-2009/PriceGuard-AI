@@ -90,6 +90,23 @@ export function parseNativeGoogleResult(res) {
   };
 }
 
+// ── Parse native Apple Sign-In result (Capacitor iOS) ─────────────────────────
+// Apple only returns email/name on the user's very first authorization with this app;
+// later sign-ins omit both, so we must not invent a unique fallback email each time —
+// that would create a new duplicate account per login. oauthSignIn() already falls back
+// to keying on `sub` (Apple's stable per-user id) whenever email is falsy, so leave it '' here.
+export function parseNativeAppleResult(res) {
+  const profile = res?.result?.profile || {};
+  const name = profile.givenName ? `${profile.givenName} ${profile.familyName || ''}`.trim() : 'Apple User';
+  return {
+    name,
+    email: profile.email || '',
+    picture: null,
+    sub: profile.user || `a_${Date.now()}`,
+    provider: 'apple',
+  };
+}
+
 // ── Parse Apple response ──────────────────────────────────────────────────────
 export function parseAppleResponse(res) {
   const email = res?.authorization?.id_token
