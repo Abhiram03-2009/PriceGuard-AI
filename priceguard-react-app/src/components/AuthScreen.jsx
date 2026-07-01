@@ -8,6 +8,7 @@ import {
   oauthSignIn,
   decodeGoogleCredential,
   parseNativeGoogleResult,
+  parseNativeAppleResult,
 } from '../authService';
 
 // Google OAuth Client ID from environment variable or fallback
@@ -82,14 +83,15 @@ export default function AuthScreen({ onAuth }) {
     setMode('profile');
   }, []);
 
-  // Native iOS: initialize the native Google Sign-In SDK instead of the web GSI script
+  // Native iOS: initialize the native Google + Apple Sign-In SDKs instead of the web GSI script
   useEffect(() => {
     if (!IS_NATIVE) return;
     SocialLogin.initialize({
       google: { iOSClientId: GOOGLE_IOS_CLIENT_ID, mode: 'online' },
+      apple: { clientId: 'com.priceguard.ai' },
     }).catch((err) => {
-      console.error('[Google] Native init error:', err);
-      setError('Google Sign-In failed to load. Please try email sign-in instead.');
+      console.error('[SocialLogin] Native init error:', err);
+      setError('Sign-in failed to load. Please try email sign-in instead.');
     });
   }, []);
 
@@ -101,6 +103,17 @@ export default function AuthScreen({ onAuth }) {
     } catch (err) {
       console.error('[Google] Native sign-in error:', err);
       setError('Google Sign-In failed. Please try again or use email.');
+    }
+  };
+
+  const handleNativeAppleSignIn = async () => {
+    setError('');
+    try {
+      const res = await SocialLogin.login({ provider: 'apple', options: { scopes: ['email', 'name'] } });
+      finishOAuth(parseNativeAppleResult(res));
+    } catch (err) {
+      console.error('[Apple] Native sign-in error:', err);
+      setError('Apple Sign-In failed. Please try again or use email.');
     }
   };
 
@@ -217,6 +230,13 @@ export default function AuthScreen({ onAuth }) {
               </button>
             ) : (
               <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: '44px' }} />
+            )}
+
+            {/* Apple Sign-In — native SDK button, iOS only (required alongside Google per App Store guideline 4.8) */}
+            {IS_NATIVE && (
+              <button type="button" className="auth-btn auth-email" onClick={handleNativeAppleSignIn} disabled={loading} style={{ marginTop: '10px' }}>
+                Continue with Apple
+              </button>
             )}
 
             {error && <div className="auth-error">{error}</div>}
