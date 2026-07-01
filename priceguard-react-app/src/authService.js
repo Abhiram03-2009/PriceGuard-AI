@@ -130,6 +130,15 @@ export function updateProfile(userId, changes) {
   return updated;
 }
 
+// ── Delete account (App Store guideline 5.1.1(v) requires in-app deletion) ────
+export function deleteAccount(userId) {
+  const users = getUsers();
+  const key = Object.keys(users).find(k => users[k].id === userId);
+  if (key) { delete users[key]; saveUsers(users); }
+  localStorage.removeItem(`${ACTIVITY_KEY}_${userId}`);
+  clearSession();
+}
+
 // ── Activity log ──────────────────────────────────────────────────────────────
 export function logActivity(userId, action, detail = '') {
   if (!userId) return;
