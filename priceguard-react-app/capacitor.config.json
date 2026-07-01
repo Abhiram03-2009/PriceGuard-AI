@@ -15,5 +15,15 @@
   },
   "ios": {
     "allowsLinkPreview": true
+  },
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "facebook": false,
+        "apple": false,
+        "twitter": false
+      }
+    }
   }
 }
