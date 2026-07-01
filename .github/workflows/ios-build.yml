@@ -136,13 +136,16 @@ jobs:
           # Use GitHub run number as CFBundleVersion — always increments, never repeats
           BUILD_NUM=$(( 100 + ${{ github.run_number }} ))
           echo "Using CFBundleVersion: $BUILD_NUM"
-          # CODE_SIGNING_ALLOWED=NO here (instead of forcing CODE_SIGN_STYLE/PROVISIONING_PROFILE
-          # on the archive action) because those overrides apply to every target in the build,
-          # including the resource-bundle helper targets Xcode auto-generates for SPM packages
-          # like GoogleSignIn's dependency tree (GoogleUtilities, AppAuth, etc.) — those bundle
-          # targets can't carry a provisioning profile and the archive hard-fails if one is forced
-          # on them. Manual signing is applied for real at the -exportArchive step below instead,
-          # via exportOptions.plist, which only touches the App target.
+          # Signing (CODE_SIGN_STYLE/DEVELOPMENT_TEAM/PROVISIONING_PROFILE_SPECIFIER/CODE_SIGN_IDENTITY)
+          # is intentionally NOT passed as a command-line override here — those apply to every
+          # target in the whole build, including the resource-bundle helper targets Xcode
+          # auto-generates for SPM packages like GoogleSignIn's dependency tree (GoogleUtilities,
+          # AppAuth, etc.), which can't carry a provisioning profile and hard-fail if one is forced
+          # on them. Instead, the App target's own Release config (project.pbxproj) is set to Manual
+          # signing with DEVELOPMENT_TEAM = "$(TEAM_ID)" and PROVISIONING_PROFILE_SPECIFIER =
+          # "$(PP_UUID)", which xcodebuild resolves from these process env vars — scoped only to
+          # the App target, so entitlements (e.g. Sign In with Apple) actually get embedded at
+          # archive time, and the SPM bundle targets are left alone with their own default signing.
           xcodebuild -project App.xcodeproj \
             -scheme App \
             -sdk iphoneos \
@@ -150,7 +153,6 @@ jobs:
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination generic/platform=iOS \
             archive \
-            CODE_SIGNING_ALLOWED=NO \
             CURRENT_PROJECT_VERSION=$BUILD_NUM \
             MARKETING_VERSION=1.5
 
