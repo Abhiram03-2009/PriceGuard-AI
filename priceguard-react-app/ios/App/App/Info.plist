@@ -47,6 +47,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>PriceGuard AI uses the camera so you can take a photo for your profile picture.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PriceGuard AI accesses your photo library so you can choose a photo for your profile picture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>PriceGuard AI can save photos you take to your photo library.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
