@@ -52,11 +52,13 @@ function gbPredict(train, testX, feats, rounds, lr, rng, maxTreeDepth = 6) {
   const base = train.reduce((s, d) => s + d.y, 0) / train.length;
   let resid = train.map(d => ({ ...d, y: d.y - base }));
   const preds = testX.map(() => base);
+  const trainPreds = train.map(() => base);   // residuals must come from training-set predictions
   for (let r = 0; r < rounds; r++) {
     const sf = feats.filter(() => rng() > 0.35);
     const tree = buildTree(resid, sf.length > 2 ? sf : feats, 0, maxTreeDepth);
     testX.forEach((x, i) => { preds[i] += lr * predTree(tree, x); });
-    resid = train.map((d, i) => ({ ...d, y: d.y - preds[i] }));
+    train.forEach((d, i) => { trainPreds[i] += lr * predTree(tree, d.x); });
+    resid = train.map((d, i) => ({ ...d, y: d.y - trainPreds[i] }));
   }
   return preds;
 }
