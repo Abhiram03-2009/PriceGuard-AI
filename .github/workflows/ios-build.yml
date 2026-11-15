@@ -120,7 +120,27 @@ jobs:
             exit 1
           fi
 
-          KEY=~/.private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8
+          # Secrets pasted through a browser often carry a trailing newline or
+          # stray spaces. Either corrupts the signed JWT, and Apple answers 401
+          # without indicating that the credential rather than the key is wrong.
+          KEY_ID="$(printf '%s' "$APPSTORE_API_KEY_ID" | tr -d '[:space:]')"
+          ISSUER_ID="$(printf '%s' "$APPSTORE_ISSUER_ID" | tr -d '[:space:]')"
+
+          if [ "${#KEY_ID}" -ne "${#APPSTORE_API_KEY_ID}" ] || [ "${#ISSUER_ID}" -ne "${#APPSTORE_ISSUER_ID}" ]; then
+            echo "::warning::Stripped whitespace from a credential. Re-save that secret with no trailing newline."
+          fi
+
+          if ! printf '%s' "$KEY_ID" | grep -qE '^[A-Za-z0-9]{10}$'; then
+            echo "::error::APPSTORE_API_KEY_ID should be 10 characters. Got ${#KEY_ID}."
+            exit 1
+          fi
+          if ! printf '%s' "$ISSUER_ID" | grep -qiE '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
+            echo "::error::APPSTORE_ISSUER_ID should be a 36 character UUID. Got ${#ISSUER_ID}."
+            exit 1
+          fi
+          echo "Key ID and Issuer ID are well formed."
+
+          KEY=~/.private_keys/AuthKey_${KEY_ID}.p8
           # printf keeps the trailing newline that `echo -n` strips; altool
           # rejects a .p8 without it and reports it as a 401, not a parse error.
           printf '%s\n' "$APPSTORE_API_PRIVATE_KEY" > "$KEY"
@@ -135,6 +155,6 @@ jobs:
           xcrun altool --upload-app \
             -f $RUNNER_TEMP/build/App.ipa \
             -t ios \
-            --apiKey $APPSTORE_API_KEY_ID \
-            --apiIssuer $APPSTORE_ISSUER_ID \
+            --apiKey "$KEY_ID" \
+            --apiIssuer "$ISSUER_ID" \
             --verbose
