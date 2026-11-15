@@ -72,7 +72,7 @@ lowest_price, average_price, highest_price
 | `arbitrage_tier` | HIGH / MEDIUM / LOW (Based on Risk mapping) |
 | `arbitrage` | 1 = flagged, 0 = safe |
 
-## DECA ICDC Competition Notes
+## Other Notes
 
 - All ML runs **entirely client-side** (no Python backend or server fees required).
 - Models retrain fresh on each uploaded dataset.
