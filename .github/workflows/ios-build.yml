@@ -154,7 +154,7 @@ jobs:
             -destination generic/platform=iOS \
             archive \
             CURRENT_PROJECT_VERSION=$BUILD_NUM \
-            MARKETING_VERSION=1.5
+            MARKETING_VERSION=1.6
 
           /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" exportOptions.plist || true
           /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" exportOptions.plist || true
